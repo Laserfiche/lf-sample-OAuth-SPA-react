@@ -46,6 +46,10 @@ Run `npm run build` to build the project. The build artifacts will be stored in 
 - It is recommended to configure IIS website to use HTTPS and disable HTTP
 - Browse to <https://myapp.example.com/lf-sample-app/> and sign-in
 
-## Running unit tests
+## Things to verify before creating a Pull Request
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+### Run lint
+
+```sh
+npm run lint
+```
