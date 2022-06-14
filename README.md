@@ -1,6 +1,6 @@
 # Laserfiche Sample App
 
-This app showcases the use of the [Laserfiche UI Components library](https://d28op2mbfuf5hv.cloudfront.net/Site/laserfiche-ui-components/beta/index.html#/) to build a single page application (SPA) that interacts with Laserfiche cloud repository using the REST Repository API.
+This app showcases the use of the [Laserfiche UI Components library](https://developer.laserfiche.com/) to build a single page application (SPA) that interacts with Laserfiche cloud repository using the REST Repository API.
 
 This application uses the `<lf-login>` UI component to initiate an OAuth2 flow to authenticate the user. SPA OAuth2 applications must first be registered in the Laserfiche account devconsole as SPA.
 
@@ -15,6 +15,10 @@ This project depends on the following libraries
 - From JSDelivr (via NPM)
   - [`<script src="https://cdn.jsdelivr.net/npm/@laserfiche/lf-ui-components@12.0.0/cdn/lf-ui-components.js" defer></script>`](https://cdn.jsdelivr.net/npm/@laserfiche/lf-ui-components@12.0.0/cdn/lf-ui-components.js)
 
+## Contribution
+
+We welcome contributions and feedback. Please follow our [contributing guidelines](./CONTRIBUTING.md).
+
 ## Pre-Requisites
 
 - Visual Studio Code
@@ -23,12 +27,12 @@ This project depends on the following libraries
 
 ## First Time Setup
 
-1. Create a new Single Page App in [devconsole](https://app.a.clouddev.laserfiche.com/devconsole/apps) and add the authentication redirect URI (e.g.: <https://myapp.example.com/lf-sample-app/>, <http://localhost:3000>) which is also the root page of this app.
+1. Create a new Single Page App in [devconsole](https://app.laserfiche.com/devconsole/apps) and add the authentication redirect URI (e.g.: <https://myapp.example.com/lf-sample-app/>, <http://localhost:3000>) which is also the root page of this app.
 2. Open folder (containing package.json) with Visual Studio Code
 3. Update the `<lf-login>` in `src/App.tsx` with the app client_id and redirect_uri as registered in step 1.
 4. In VS Code, open a New Terminal window.
 5. Run `npm install` in root folder. This command installs dependencies packages.
-6. Run `npm start` in root folder. This runs the project on localhost. You can also you `npm run build` depending on how you want to host the application.
+6. Run `npm start` in root folder. This runs the project on localhost. You can also you `npm run build` depending on how you want to host the application. See below for details.
 
 ## Build
 

@@ -1,5 +1,5 @@
 {
-  "name": "react-test",
+  "name": "lf-sample-app-OAuth-SPA-react",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -19,6 +19,11 @@
     "react-scripts": "5.0.0",
     "typescript": "^4.5.5",
     "web-vitals": "^2.1.4"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Laserfiche/lf-sample-app-OAuth-SPA-react"
   },
   "scripts": {
     "start": "react-scripts start",
