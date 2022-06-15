@@ -42,6 +42,11 @@ interface IRepositoryApiClientExInternal extends IRepositoryApiClientEx {
 }
 
 export default class App extends React.Component<{}, { expandFolderBrowser: boolean, selectedFolder: LfFolder | undefined, selectedFile?: File; isLoggedIn: boolean }> {
+  REDIRECT_URI: string = 'REPLACE_WITH_YOUR_REDIRECT_URI'; // i.e http://localhost:3000, https://serverName/lf-sample/index.html
+  CLIENT_ID: string = 'REPLACE_WITH_YOUR_CLIENT_ID';
+  HOST_NAME: string = ''; // only add this if you are using a different region or environment (i.e. laserfiche.ca, eu.laserfiche.com)
+  REGIONAL_DOMAIN: string = 'laserfiche.com' // only update this if you are using a different region or environment
+
   loginComponent: React.RefObject<NgElement & WithProperties<LfLoginComponent>>;
   folderBrowser: React.RefObject<NgElement & WithProperties<LfFileExplorerComponent>>;
   repoClient?: IRepositoryApiClientExInternal;
@@ -85,7 +90,7 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
   private async getAndInitializeRepositoryClientAndServicesAsync() {
     const accessToken = this.loginComponent?.current?.authorization_credentials?.accessToken;
     if (accessToken) {
-      this.setState(() => {return {isLoggedIn: true}});
+      this.setState(() => { return { isLoggedIn: true } });
       await this.ensureRepoClientInitializedAsync();
 
       // create the tree service to interact with the LF Api
@@ -104,50 +109,54 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
     }
   }
 
+  private beforeFetchRequestAsync = async (url: string, request: RequestInit) => {
+    // TODO trigger authorization flow if no accessToken
+    const accessToken = this.loginComponent?.current?.authorization_credentials?.accessToken;
+    if (accessToken) {
+      this.addAuthorizationHeader(request, accessToken);
+      return { regionalDomain: this.REGIONAL_DOMAIN } // update this if you are using a different region
+    }
+    else {
+      throw new Error('No access token');
+    }
+  }
+
+  private afterFetchResponseAsync = async (url: string, response: ResponseInit, request: RequestInit) => {
+    if (response.status === 401) {
+      const refresh = await this.loginComponent.current?.refreshTokenAsync(true);
+      if (refresh) {
+        const accessToken = this.loginComponent.current?.authorization_credentials?.accessToken;
+        this.addAuthorizationHeader(request, accessToken);
+        return true;
+      }
+      else {
+        this.repoClient?.clearCurrentRepo();
+        return false;
+      }
+    }
+    return false;
+  }
+
+  private getCurrentRepo = async () => {
+    const repos = await this.repoClient!.repositoriesClient.getRepositoryList({});
+    const repo = repos[0];
+    if (repo.repoId && repo.repoName) {
+      return { repoId: repo.repoId, repoName: repo.repoName };
+    }
+    throw new Error('Current repoId undefined.')
+  };
+
   async ensureRepoClientInitializedAsync(): Promise<void> {
     if (!this.repoClient) {
       const partialRepoClient: IRepositoryApiClient =
         RepositoryApiClient.createFromHttpRequestHandler(
           {
-            beforeFetchRequestAsync: async (url, request) => {
-              // TODO trigger authorization flow if no accessToken
-              const accessToken = this.loginComponent?.current?.authorization_credentials?.accessToken;
-              if (accessToken) {
-                this.addAuthorizationHeader(request, accessToken);
-                return { regionalDomain: 'a.clouddev.laserfiche.com' }
-              }
-              else {
-                return { regionalDomain: '' }
-              }
-            },
-            afterFetchResponseAsync: async (url, response, request) => {
-              if (response.status === 401) {
-                const refresh = await this.loginComponent.current?.refreshTokenAsync(true);
-                if (refresh) {
-                  const accessToken = this.loginComponent.current?.authorization_credentials?.accessToken;
-                  this.addAuthorizationHeader(request, accessToken);
-                  return true;
-                }
-                else {
-                  this.repoClient?.clearCurrentRepo();
-                  return false;
-                }
-              }
-              return false;
-            }
+            beforeFetchRequestAsync: this.beforeFetchRequestAsync,
+            afterFetchResponseAsync: this.afterFetchResponseAsync
           });
-      const getCurrentRepo = async () => {
-        const repos = await partialRepoClient.repositoriesClient.getRepositoryList({});
-        const repo = repos[0];
-        if (repo.repoId && repo.repoName) {
-          return { repoId: repo.repoId, repoName: repo.repoName };
-        }
-        throw new Error('Current repoId undefined.')
-      };
       const clearCurrentRepo = () => {
         this.repoClient!._repoId = undefined;
         this.repoClient!._repoName = undefined;
-        // TODO is there anything else to clear?
       }
       this.repoClient = {
         clearCurrentRepo,
@@ -160,7 +169,7 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
           }
           else {
             console.log('getting id from api')
-            const repo = (await getCurrentRepo()).repoId;
+            const repo = (await this.getCurrentRepo()).repoId;
             this.repoClient!._repoId = repo;
             return repo;
           }
@@ -170,7 +179,7 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
             return this.repoClient._repoName;
           }
           else {
-            const repo = (await getCurrentRepo()).repoName;
+            const repo = (await this.getCurrentRepo()).repoName;
             this.repoClient!._repoName = repo;
             return repo;
           }
@@ -379,8 +388,8 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
         <h2>Save to Laserfiche Sample Application</h2>
 
         <div className="lf-component-container lf-right-button">
-          <lf-login redirect_uri="http://localhost:3000"
-            authorize_url_host_name="a.clouddev.laserfiche.com" redirect_behavior="Replace" client_id="b91PgGR2dQpeYeL2s790VY0w"
+          <lf-login redirect_uri={this.REDIRECT_URI}
+            authorize_url_host_name={this.HOST_NAME} redirect_behavior="Replace" client_id={this.HOST_NAME}
             ref={this.loginComponent}>
           </lf-login>
         </div>
