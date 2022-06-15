@@ -1,11 +1,11 @@
 import React from 'react';
 import './App.css';
-import { FieldValue, LfFieldContainerComponent, LfFileExplorerComponent, LfLoginComponent, TreeNode } from '@laserfiche/types-lf-ui-components';
+import { LfFieldContainerComponent, LfFileExplorerComponent, LfLoginComponent, TreeNode } from '@laserfiche/types-lf-ui-components';
 import { NgElement, WithProperties } from '@angular/elements';
 import { LfLocalizationService } from '@laserfiche/lf-js-utils';
 import { IRepositoryApiClientEx, LfFieldsService, LfFolder, LfRepoTreeEntryType, LfRepoTreeService } from '@laserfiche/lf-ui-components-services';
 import { PathUtils } from '@laserfiche/lf-js-utils';
-import { RepositoryInfo, PostEntryWithEdocMetadataRequest, CreateEntryResult, RepositoryApiClient, FileParameter, PutFieldValsRequest, IRepositoryApiClient, FieldToUpdate, ValueToUpdate } from '@laserfiche/lf-repository-api-client';
+import { PostEntryWithEdocMetadataRequest, RepositoryApiClient, FileParameter, PutFieldValsRequest, IRepositoryApiClient, FieldToUpdate, ValueToUpdate } from '@laserfiche/lf-repository-api-client';
 import { getEntryWebAccessUrl } from './url-utils';
 
 const resources: Map<string, object> = new Map<string, object>([
