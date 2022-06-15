@@ -389,7 +389,7 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
 
         <div className="lf-component-container lf-right-button">
           <lf-login redirect_uri={this.REDIRECT_URI}
-            authorize_url_host_name={this.HOST_NAME} redirect_behavior="Replace" client_id={this.HOST_NAME}
+            authorize_url_host_name={this.HOST_NAME} redirect_behavior="Replace" client_id={this.CLIENT_ID}
             ref={this.loginComponent}>
           </lf-login>
         </div>
