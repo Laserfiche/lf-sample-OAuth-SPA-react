@@ -5,8 +5,8 @@
   "dependencies": {
     "@angular/elements": "^13.2.1",
     "@laserfiche/lf-js-utils": "^3.0.5",
-    "@laserfiche/lf-repository-api-client": "^1.0.3--preview-2489888364",
-    "@laserfiche/lf-ui-components-services": "^3.0.0--preview-2490257584",
+    "@laserfiche/lf-repository-api-client": "^1.0.6",
+    "@laserfiche/lf-ui-components-services": "^3.0.0",
     "@testing-library/jest-dom": "^5.16.2",
     "@testing-library/react": "^12.1.2",
     "@testing-library/user-event": "^13.5.0",
