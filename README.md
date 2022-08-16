@@ -46,3 +46,7 @@ Run `npm run build` to build the project. The build artifacts will be stored in 
 - On a Windows machine you can use IIS Service Manager and create a new web application or virtual directory to publish the `build/` folder
 - It is recommended to configure IIS website to use HTTPS and disable HTTP
 - Browse to <https://myapp.example.com/lf-sample-app/> and sign-in
+
+## Known issues
+
+- Build warnings "Failed to parse source map from ...": See [React discussion](https://github.com/facebook/create-react-app/discussions/11767)
