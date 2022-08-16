@@ -9,7 +9,7 @@ import { PostEntryWithEdocMetadataRequest, RepositoryApiClient, FileParameter, P
 import { getEntryWebAccessUrl } from './url-utils';
 
 const resources: Map<string, object> = new Map<string, object>([
-  ['en', {
+  ['en-US', {
     'FOLDER_BROWSER_PLACEHOLDER': 'No folder selected',
     'SAVE_TO_LASERFICHE': 'Save to Laserfiche',
     'CLICK_TO_UPLOAD': 'Click to upload file',
@@ -21,7 +21,7 @@ const resources: Map<string, object> = new Map<string, object>([
     'CANCEL': 'Cancel',
     'ERROR_SAVING': 'Error Saving'
   }],
-  ['es', {
+  ['es-MX', {
     'FOLDER_BROWSER_PLACEHOLDER': 'No folder selected - Spanish',
     'SAVE_TO_LASERFICHE': 'Save to Laserfiche - Spanish',
     'CLICK_TO_UPLOAD': 'Click to upload file - Spanish',
@@ -385,7 +385,7 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
     return (
       <div className="App">
         <header className="App-header"></header>
-        <h2>Save to Laserfiche Sample Application</h2>
+        <h2 className="lf-sample-app-title">Save to Laserfiche Sample Application</h2>
 
         <div className="lf-component-container lf-right-button">
           <lf-login redirect_uri={this.REDIRECT_URI}
@@ -396,7 +396,7 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
 
         <div hidden={!this.state?.isLoggedIn}>
 
-          <button onClick={() => this.onClickRefreshAsync()}>Refresh</button>
+          <button className="lf-refresh-button" onClick={() => this.onClickRefreshAsync()}>Refresh</button>
           <div className="folder-browse-select lf-component-container">
             <span>
               {this.FILE_NAME}
