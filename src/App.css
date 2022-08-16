@@ -1,3 +1,7 @@
+.lf-sample-app-title {
+  margin: 25px;
+}
+
 .lf-component-container {
   max-height: 500px;
   max-width: 750px;
@@ -6,6 +10,10 @@
   margin: 25px;
   padding: 20px;
   padding-bottom: 30px;
+}
+
+.lf-refresh-button {
+  margin-left: 25px;
 }
 
 .lf-folder-browser-sample-container {
