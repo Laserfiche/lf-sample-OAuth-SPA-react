@@ -487,7 +487,7 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
               </lf-repository-browser>}
               <button className="lf-button primary-button" onClick={this.onOpenNode} hidden={!this.state?.shouldShowOpen}>OPEN
               </button>
-              <button className="lf-button primary-button" onClick={this.onSelectFolder} hidden={!this.state?.shouldShowSelect}>SELECT
+              <button className="lf-button primary-button" onClick={this.onSelectFolder} hidden={!this.state?.shouldShowSelect}>{this.SELECT}
               </button>
             </div>
           </div>
