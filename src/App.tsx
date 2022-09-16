@@ -1,12 +1,20 @@
 import React from 'react';
 import './App.css';
-import { LfFieldContainerComponent, LfFileExplorerComponent, LfLoginComponent, TreeNode } from '@laserfiche/types-lf-ui-components';
+import { LfFieldContainerComponent, LfLoginComponent, LfRepositoryBrowserComponent, LfTreeNode } from '@laserfiche/types-lf-ui-components';
 import { NgElement, WithProperties } from '@angular/elements';
 import { LfLocalizationService } from '@laserfiche/lf-js-utils';
-import { IRepositoryApiClientEx, LfFieldsService, LfFolder, LfRepoTreeEntryType, LfRepoTreeService } from '@laserfiche/lf-ui-components-services';
+import { IRepositoryApiClientEx, LfFieldsService, LfRepoTreeNode, LfRepoTreeNodeService } from '@laserfiche/lf-ui-components-services';
 import { PathUtils } from '@laserfiche/lf-js-utils';
-import { PostEntryWithEdocMetadataRequest, RepositoryApiClient, FileParameter, PutFieldValsRequest, IRepositoryApiClient, FieldToUpdate, ValueToUpdate } from '@laserfiche/lf-repository-api-client';
+import { PostEntryWithEdocMetadataRequest, RepositoryApiClient, FileParameter, PutFieldValsRequest, IRepositoryApiClient, FieldToUpdate, ValueToUpdate, EntryType } from '@laserfiche/lf-repository-api-client';
 import { getEntryWebAccessUrl } from './url-utils';
+
+interface LfFolder {
+  path: string;
+  entryId: number | undefined;
+  breadcrumbs?: LfRepoTreeNode[];
+  displayName?: string;
+  displayPath?: string;
+}
 
 const resources: Map<string, object> = new Map<string, object>([
   ['en-US', {
@@ -41,17 +49,17 @@ interface IRepositoryApiClientExInternal extends IRepositoryApiClientEx {
   _repoName?: string;
 }
 
-export default class App extends React.Component<{}, { expandFolderBrowser: boolean, selectedFolder: LfFolder | undefined, selectedFile?: File; isLoggedIn: boolean }> {
+export default class App extends React.Component<{}, { expandFolderBrowser: boolean, selectedFolder: LfFolder | undefined, selectedFile?: File; isLoggedIn: boolean, shouldShowOpen: Boolean, shouldShowSelect: Boolean }> {
   REDIRECT_URI: string = 'REPLACE_WITH_YOUR_REDIRECT_URI'; // i.e http://localhost:3000, https://serverName/lf-sample/index.html
   CLIENT_ID: string = 'REPLACE_WITH_YOUR_CLIENT_ID';
   HOST_NAME: string = ''; // only add this if you are using a different region or environment (i.e. laserfiche.ca, eu.laserfiche.com)
   REGIONAL_DOMAIN: string = 'laserfiche.com' // only update this if you are using a different region or environment
 
   loginComponent: React.RefObject<NgElement & WithProperties<LfLoginComponent>>;
-  folderBrowser: React.RefObject<NgElement & WithProperties<LfFileExplorerComponent>>;
+  repositoryBrowser: React.RefObject<NgElement & WithProperties<LfRepositoryBrowserComponent>>;
   repoClient?: IRepositoryApiClientExInternal;
   creationDate?: string;
-  lfRepoTreeService?: LfRepoTreeService;
+  lfRepoTreeService?: LfRepoTreeNodeService;
   selectedNodeUrl: string | undefined;
   selectedFolderDisplayName: string | undefined;
   fileName: string | undefined;
@@ -60,14 +68,15 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
   fieldContainer: React.RefObject<NgElement & WithProperties<LfFieldContainerComponent>>;
   fieldsService?: LfFieldsService;
   localizationService = new LfLocalizationService(resources);
-
+  entrySelected: LfTreeNode | undefined;
+  
   constructor(props: any) {
     super(props);
     this.loginComponent = React.createRef();
-    this.folderBrowser = React.createRef();
+    this.repositoryBrowser = React.createRef();
     this.fileInput = React.createRef();
     this.fieldContainer = React.createRef();
-    this.setState(() => { return { expandFolderBrowser: false, isLoggedIn: false, selectedFolder: undefined } });
+    this.setState(() => { return { expandFolderBrowser: false, isLoggedIn: false, selectedFolder: undefined, shouldShowOpen: false, shouldShowSelect: false } });
   }
 
   componentDidMount = async () => {
@@ -94,9 +103,9 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
       await this.ensureRepoClientInitializedAsync();
 
       // create the tree service to interact with the LF Api
-      this.lfRepoTreeService = new LfRepoTreeService(this.repoClient!);
+      this.lfRepoTreeService = new LfRepoTreeNodeService(this.repoClient!);
       // by default all entries are viewable
-      this.lfRepoTreeService.viewableEntryTypes = [LfRepoTreeEntryType.Folder, LfRepoTreeEntryType.ShortcutFolder];
+      this.lfRepoTreeService.viewableEntryTypes = [EntryType.Folder, EntryType.Folder];
 
       // create the fields service to let the field component interact with Laserfiche
       this.fieldsService = new LfFieldsService(this.repoClient!);
@@ -225,27 +234,42 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
     }
   }
 
-  onOkClick = async (ev: Event) => {
-    const selectedNode = (ev as CustomEvent<TreeNode>).detail;
-    const breadcrumbs = this.folderBrowser.current?.breadcrumbs;
-    const entryId = Number.parseInt(selectedNode.id, 10);
+  onSelectFolder = async () => {
+    if (!this.repoClient) {
+      throw new Error('Repo Client is undefined.');
+    }
+    if (!this.loginComponent) {
+      throw new Error('LfLoginComponent is not found.');
+    }
+    const selectedNode = this.repositoryBrowser.current?.currentFolder as LfRepoTreeNode;
+    let entryId = Number.parseInt(selectedNode.id, 10);
     const path = selectedNode.path;
-    const selectedFolder: LfFolder = {
+    if (selectedNode.entryType === EntryType.Shortcut) {
+      if (selectedNode.targetId)
+      entryId = selectedNode.targetId;
+    }
+    let selectedFolder = {
       entryId,
       path,
       displayName: this.getFolderNameText(entryId, path),
       displayPath: this.getFolderPathTooltip(path)
     };
-    if (breadcrumbs) {
-      selectedFolder.breadcrumbs = breadcrumbs;
-    }
     const nodeId = selectedNode.id;
-    const repoId = (await this.repoClient?.getCurrentRepoId());
-    const waUrl = this.loginComponent.current?.account_endpoints?.webClientUrl;
-    this.selectedNodeUrl = getEntryWebAccessUrl(nodeId, repoId!, waUrl!, selectedNode.isContainer);
-    this.selectedFolderDisplayName = selectedFolder?.displayName;
+    const repoId = (await this.repoClient.getCurrentRepoId());
+    const waUrl = this.loginComponent.current!.account_endpoints!.webClientUrl;
+    this.selectedNodeUrl = getEntryWebAccessUrl(nodeId, repoId, waUrl, selectedNode.isContainer);
     this.setState(() => { return { expandFolderBrowser: false, selectedFolder: selectedFolder } });
+    this.setState(() => { return { shouldShowOpen: this.setShouldShowOpen() }});
+    this.setState(() => { return { shouldShowSelect: this.setShouldShowSelect() }});
   }
+
+  onEntrySelected = (event: any) => {
+    const treeNodesSelected: LfTreeNode[] = event.detail;
+    this.entrySelected = treeNodesSelected?.length > 0 ? treeNodesSelected[0] : undefined;
+    this.setState(() => { return { shouldShowOpen: this.setShouldShowOpen() }});
+    this.setState(() => { return { shouldShowSelect: this.setShouldShowSelect() }});
+  }
+  
   folderCancelClick = () => {
     this.setState(() => { return { expandFolderBrowser: false } });
   }
@@ -254,18 +278,44 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
     this.setState(() => { return { expandFolderBrowser: true } }, async () => {
       await this.initializeTreeAsync()
     });
+    this.setState(() => { return { shouldShowOpen: this.setShouldShowOpen() }});
+    this.setState(() => { return { shouldShowSelect: this.setShouldShowSelect() }});
   }
 
   async initializeTreeAsync() {
-    this.folderBrowser.current?.addEventListener('okClick', this.onOkClick);
-    this.folderBrowser.current?.addEventListener('cancelClick', this.folderCancelClick);
-    await this.folderBrowser?.current?.initAsync({
-      treeService: this.lfRepoTreeService!
-    });
+    this.repositoryBrowser.current?.addEventListener('entrySelected', this.onEntrySelected );
+    let defaultNode : LfTreeNode = {
+      id: '168158',
+      isContainer: true,
+      isLeaf: false,
+      path: '\\Ke\\test\\new folder test',
+      name: 'new folder test',
+      icon: ''
+    };
+    let focusedNode;
+    if (this.state.selectedFolder) {
+      focusedNode = {
+        id: this.state.selectedFolder.entryId!.toString(),
+        isContainer: true,
+        isLeaf: false,
+        path: this.state.selectedFolder.path,
+        name: this.state.selectedFolder.displayName,
+        icon: ''
+      }
+    } else {
+      focusedNode = defaultNode;
+    }
+    await this.repositoryBrowser?.current?.initAsync(this.lfRepoTreeService!, focusedNode as LfTreeNode);
+  }
+
+  async onOpenNode() {
+    // const nodeToOpen = this.entrySelected;
+    // await this.repositoryBrowser?.current?.openChildFolderAsync(nodeToOpen);
+    this.setState(() => { return { shouldShowOpen: this.setShouldShowOpen() }});
+    this.setState(() => { return { shouldShowSelect: this.setShouldShowSelect() }});
   }
 
   // metadata handlers
-
   onDialogOpened = () => {
     // "hack" for add remove dialog on smaller screen
     window.scrollTo({ top: 0, left: 0 });
@@ -380,6 +430,14 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
     await this.loginComponent.current?.refreshTokenAsync(true);
   }
 
+  setShouldShowSelect(): boolean {
+    return !this.state.shouldShowOpen && !!this.repositoryBrowser?.current?.currentFolder;
+  }
+
+  setShouldShowOpen(): boolean {
+    return !!this.entrySelected;
+  }
+
   // react render method
   render() {
     return (
@@ -424,9 +482,13 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
             <a hidden={!this.selectedNodeUrl} className="open-in-lf-link" href={this.selectedNodeUrl} target="_blank"
               rel="noopener noreferrer">{this.OPEN_IN_LASERFICHE}</a>
             <div className="lf-folder-browser-sample-container">
-              {this.state?.expandFolderBrowser && <lf-folder-browser ref={this.folderBrowser}
-                ok_button_text="SELECT" cancel_button_text="CANCEL">
-              </lf-folder-browser>}
+              {this.state?.expandFolderBrowser && <lf-repository-browser ref={this.repositoryBrowser}
+                ok_button_text="SELECT" cancel_button_text="CANCEL" style={{height: '450px'}}>
+              </lf-repository-browser>}
+              <button className="lf-button primary-button" onClick={this.onOpenNode} hidden={!this.state?.shouldShowOpen}>OPEN
+              </button>
+              <button className="lf-button primary-button" onClick={this.onSelectFolder} hidden={!this.state?.shouldShowSelect}>SELECT
+              </button>
             </div>
           </div>
 
