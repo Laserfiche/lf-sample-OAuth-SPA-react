@@ -8,14 +8,6 @@ import { PathUtils } from '@laserfiche/lf-js-utils';
 import { PostEntryWithEdocMetadataRequest, RepositoryApiClient, FileParameter, PutFieldValsRequest, IRepositoryApiClient, FieldToUpdate, ValueToUpdate, EntryType } from '@laserfiche/lf-repository-api-client';
 import { getEntryWebAccessUrl } from './url-utils';
 
-interface LfFolder {
-  path: string;
-  entryId: number | undefined;
-  breadcrumbs?: LfRepoTreeNode[];
-  displayName?: string;
-  displayPath?: string;
-}
-
 const resources: Map<string, object> = new Map<string, object>([
   ['en-US', {
     'FOLDER_BROWSER_PLACEHOLDER': 'No folder selected',
