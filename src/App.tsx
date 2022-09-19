@@ -302,7 +302,7 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
   }
 
   async onOpenNode() {
-    this.repositoryBrowser?.current?.openSelectedNodesAsync();
+    // this.repositoryBrowser?.current?.openSelectedNodesAsync(); // TODO: use openSelectedNodesAsync
     this.setState(() => { return { shouldShowOpen: this.getShouldShowOpen() }});
     this.setState(() => { return { shouldShowSelect: this.getShouldShowSelect() }});
   }
