@@ -42,10 +42,10 @@ interface IRepositoryApiClientExInternal extends IRepositoryApiClientEx {
 }
 
 export default class App extends React.Component<{}, { expandFolderBrowser: boolean, selectedFolderDisplayName: string, selectedFile?: File; isLoggedIn: boolean, shouldShowOpen: Boolean, shouldShowSelect: Boolean }> {
-  REDIRECT_URI: string = 'REPLACE_WITH_YOUR_REDIRECT_URI'; // i.e http://localhost:3000, https://serverName/lf-sample/index.html
-  CLIENT_ID: string = 'REPLACE_WITH_YOUR_CLIENT_ID';
-  HOST_NAME: string = ''; // only add this if you are using a different region or environment (i.e. laserfiche.ca, eu.laserfiche.com)
-  REGIONAL_DOMAIN: string = 'laserfiche.com' // only update this if you are using a different region or environment
+  REDIRECT_URI: string = 'http://localhost:3000'; // i.e http://localhost:3000, https://serverName/lf-sample/index.html
+  CLIENT_ID: string = '4ff24ec4-33fc-4cf0-958c-78771b351be2';
+  HOST_NAME: string = 'a.clouddev.laserfiche.com'; // only add this if you are using a different region or environment (i.e. laserfiche.ca, eu.laserfiche.com)
+  REGIONAL_DOMAIN: string = 'a.clouddev.laserfiche.com' // only update this if you are using a different region or environment
 
   loginComponent: React.RefObject<NgElement & WithProperties<LfLoginComponent>>;
   repositoryBrowser: React.RefObject<NgElement & WithProperties<LfRepositoryBrowserComponent>>;
@@ -293,8 +293,8 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
     await this.repositoryBrowser?.current?.initAsync(this.lfRepoTreeService!, focusedNode as LfTreeNode);
   }
 
-  async onOpenNode() {
-    // this.repositoryBrowser?.current?.openSelectedNodesAsync(); // TODO: use openSelectedNodesAsync
+  onOpenNode = async () => {
+    await this.repositoryBrowser?.current?.openSelectedNodesAsync();
     this.setState(() => { return { shouldShowOpen: this.getShouldShowOpen() }});
     this.setState(() => { return { shouldShowSelect: this.getShouldShowSelect() }});
   }

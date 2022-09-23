@@ -50,6 +50,6 @@
     ]
   },
   "devDependencies": {
-    "@laserfiche/types-lf-ui-components": "^13.1.1--preview-3070629208"
+    "@laserfiche/types-lf-ui-components": "^13.1.2"
   }
 }
