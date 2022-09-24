@@ -70,7 +70,13 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
     this.repositoryBrowser = React.createRef();
     this.fileInput = React.createRef();
     this.fieldContainer = React.createRef();
-    this.setState(() => { return { expandFolderBrowser: false, isLoggedIn: false, selectedFolderDisplayName: '', shouldShowOpen: false, shouldShowSelect: false } });
+    this.setState({
+      expandFolderBrowser: false, 
+      isLoggedIn: false, 
+      selectedFolderDisplayName: '', 
+      shouldShowOpen: false, 
+      shouldShowSelect: false
+    });
   }
 
   componentDidMount = async () => {
@@ -87,13 +93,13 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
   }
 
   logoutCompleted = () => {
-    this.setState(() => { return { isLoggedIn: false } });
+    this.setState({ isLoggedIn: false });
   }
 
   private async getAndInitializeRepositoryClientAndServicesAsync() {
     const accessToken = this.loginComponent?.current?.authorization_credentials?.accessToken;
     if (accessToken) {
-      this.setState(() => { return { isLoggedIn: true } });
+      this.setState({ isLoggedIn: true });
       await this.ensureRepoClientInitializedAsync();
 
       // create the tree service to interact with the LF Api
@@ -243,28 +249,36 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
     const repoId = (await this.repoClient.getCurrentRepoId());
     const waUrl = this.loginComponent.current!.account_endpoints!.webClientUrl;
     this.selectedNodeUrl = getEntryWebAccessUrl(nodeId, repoId, waUrl, selectedNode.isContainer);
-    this.setState(() => { return { expandFolderBrowser: false, selectedFolderDisplayName: this.getFolderNameText(entryId, path) } });
-    this.setState(() => { return { shouldShowOpen: this.getShouldShowOpen() }});
-    this.setState(() => { return { shouldShowSelect: this.getShouldShowSelect() }});
+    this.setState({
+      selectedFolderDisplayName: this.getFolderNameText(entryId, path),
+      shouldShowOpen: false,
+      expandFolderBrowser: false,
+      shouldShowSelect: false,
+    })
+
   }
 
   onEntrySelected = (event: any) => {
     const treeNodesSelected: LfTreeNode[] = event.detail;
     this.entrySelected = treeNodesSelected?.length > 0 ? treeNodesSelected[0] : undefined;
-    this.setState(() => { return { shouldShowOpen: this.getShouldShowOpen() }});
-    this.setState(() => { return { shouldShowSelect: this.getShouldShowSelect() }});
+    this.setState({
+      shouldShowOpen: this.getShouldShowOpen(),
+      shouldShowSelect: this.getShouldShowSelect()
+    });
   }
   
   folderCancelClick = () => {
-    this.setState(() => { return { expandFolderBrowser: false } });
+    this.setState({ expandFolderBrowser: false });
   }
 
   onClickBrowse = async () => {
-    this.setState(() => { return { expandFolderBrowser: true } }, async () => {
+    this.setState({ expandFolderBrowser: true}, async () => {
       await this.initializeTreeAsync()
     });
-    this.setState(() => { return { shouldShowOpen: this.getShouldShowOpen() }});
-    this.setState(() => { return { shouldShowSelect: this.getShouldShowSelect() }});
+    this.setState({
+      shouldShowOpen: this.getShouldShowOpen(),
+      shouldShowSelect: this.getShouldShowSelect()
+    });
   }
 
   async initializeTreeAsync() {
@@ -295,8 +309,10 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
 
   onOpenNode = async () => {
     await this.repositoryBrowser?.current?.openSelectedNodesAsync();
-    this.setState(() => { return { shouldShowOpen: this.getShouldShowOpen() }});
-    this.setState(() => { return { shouldShowSelect: this.getShouldShowSelect() }});
+    this.setState({
+      shouldShowOpen:  this.getShouldShowOpen(),
+      shouldShowSelect: this.getShouldShowSelect()
+    });
   }
 
   // metadata handlers
@@ -358,7 +374,7 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
     const fileSelected = files?.item(0) ?? undefined;
     this.fileName = PathUtils.removeFileExtension(fileSelected?.name ?? '');
     this.fileExtension = PathUtils.getFileExtension(fileSelected?.name ?? '');
-    this.setState(() => { return { selectedFile: fileSelected } });
+    this.setState({selectedFile: fileSelected});
   }
 
   clearFileSelected = () => {
@@ -366,7 +382,7 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
     this.fileInput!.current!.files = null;
     this.fileName = undefined;
     this.fileExtension = undefined;
-    this.setState(() => { return { selectedFile: undefined } })
+    this.setState({selectedFile: undefined});
   }
 
   updateFileName = (ev: React.ChangeEvent<HTMLInputElement>) => {
@@ -415,7 +431,7 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
   }
 
   getShouldShowSelect(): boolean {
-    return !this.state.shouldShowOpen && !!this.repositoryBrowser?.current?.currentFolder;
+    return !this.entrySelected && !!this.repositoryBrowser?.current?.currentFolder;
   }
 
   getShouldShowOpen(): boolean {
