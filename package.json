@@ -6,7 +6,7 @@
     "@angular/elements": "^13.2.1",
     "@laserfiche/lf-js-utils": "^4.0.3",
     "@laserfiche/lf-repository-api-client": "^1.0.6",
-    "@laserfiche/lf-ui-components-services": "^13.0.0",
+    "@laserfiche/lf-ui-components-services": "^13.0.1",
     "@testing-library/jest-dom": "^5.16.2",
     "@testing-library/react": "^12.1.2",
     "@testing-library/user-event": "^13.5.0",
@@ -29,7 +29,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "lint": "eslint src/**/*.tsx"
   },
   "eslintConfig": {
     "extends": [
@@ -50,6 +51,10 @@
     ]
   },
   "devDependencies": {
-    "@laserfiche/types-lf-ui-components": "^13.1.2"
+    "@laserfiche/types-lf-ui-components": "^13.1.2",
+    "@typescript-eslint/eslint-plugin": "^5.38.1",
+    "@typescript-eslint/parser": "^5.38.1",
+    "eslint": "^8.24.0",
+    "eslint-plugin-react": "^7.31.8"
   }
 }
