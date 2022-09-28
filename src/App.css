@@ -46,3 +46,24 @@ svg#close {
   display: flex;
   justify-content: flex-end;
 }
+
+.repository-browser{
+  flex-direction: row;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  width: 100%;
+  max-height: 100%;
+  cursor: pointer;
+  flex-grow: 1;
+}
+
+.repository-browser-button-containers {
+  align-self: flex-end;
+  margin: 10px 0 0 0;
+}
+
+.margin-left-button {
+  margin-left: 10px;
+}

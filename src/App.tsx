@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import { LfFieldContainerComponent, LfLoginComponent, LfRepositoryBrowserComponent, LfTreeNode } from '@laserfiche/types-lf-ui-components';
+import { LfFieldContainerComponent, LfLoginComponent, LfRepositoryBrowserComponent } from '@laserfiche/types-lf-ui-components';
 import { NgElement, WithProperties } from '@angular/elements';
 import { LfLocalizationService } from '@laserfiche/lf-js-utils';
 import { IRepositoryApiClientEx, LfFieldsService, LfRepoTreeNode, LfRepoTreeNodeService } from '@laserfiche/lf-ui-components-services';
@@ -47,7 +47,7 @@ interface ILfSelectedFolder {
   selectedFolderName: string; // name of the selected folder
 }
 
-export default class App extends React.Component<any, { expandFolderBrowser: boolean; lfSelectedFolder?: ILfSelectedFolder; selectedFile?: File; isLoggedIn: boolean; shouldShowOpen: boolean; shouldShowSelect: boolean}> {
+export default class App extends React.Component<any, { expandFolderBrowser: boolean; lfSelectedFolder?: ILfSelectedFolder; selectedFile?: File; isLoggedIn: boolean; shouldShowOpen: boolean; shouldShowSelect: boolean; shouldDisableSelect: boolean}> {
   REDIRECT_URI: string = 'REPLACE_WITH_YOUR_REDIRECT_URI'; // i.e http://localhost:3000, https://serverName/lf-sample/index.html
   CLIENT_ID: string = 'REPLACE_WITH_YOUR_CLIENT_ID';
   HOST_NAME: string = ''; // only add this if you are using a different region or environment (i.e. laserfiche.ca, eu.laserfiche.com)
@@ -63,7 +63,7 @@ export default class App extends React.Component<any, { expandFolderBrowser: boo
   fieldContainer: React.RefObject<NgElement & WithProperties<LfFieldContainerComponent>>;
   fieldsService?: LfFieldsService;
   localizationService: LfLocalizationService = new LfLocalizationService(resources);
-  entrySelected: LfTreeNode | undefined;
+  entrySelected: LfRepoTreeNode | undefined;
   
   constructor(props: any) {
     super(props);
@@ -80,7 +80,8 @@ export default class App extends React.Component<any, { expandFolderBrowser: boo
         selectedFolderName: ''
       }, 
       shouldShowOpen: false, 
-      shouldShowSelect: false
+      shouldShowSelect: false,
+      shouldDisableSelect: false
     });
   }
 
@@ -265,12 +266,21 @@ export default class App extends React.Component<any, { expandFolderBrowser: boo
     });
   };
 
+  onClickCancelButton = () => {
+    this.setState({
+      expandFolderBrowser: false,
+      shouldShowOpen: false,
+      shouldShowSelect: false
+    });
+  };
+
   onEntrySelected = (event: any) => {
-    const treeNodesSelected: LfTreeNode[] = event.detail;
+    const treeNodesSelected: LfRepoTreeNode[] = event.detail;
     this.entrySelected = treeNodesSelected?.length > 0 ? treeNodesSelected[0] : undefined;
     this.setState({
       shouldShowOpen: this.getShouldShowOpen(),
-      shouldShowSelect: this.getShouldShowSelect()
+      shouldShowSelect: this.getShouldShowSelect(),
+      shouldDisableSelect: this.getShouldDisableSelect(),
     });
   };
   
@@ -284,7 +294,8 @@ export default class App extends React.Component<any, { expandFolderBrowser: boo
     });
     this.setState({
       shouldShowOpen: this.getShouldShowOpen(),
-      shouldShowSelect: this.getShouldShowSelect()
+      shouldShowSelect: this.getShouldShowSelect(),
+      shouldDisableSelect: this.getShouldDisableSelect()
     });
   };
 
@@ -480,6 +491,10 @@ export default class App extends React.Component<any, { expandFolderBrowser: boo
     return !!this.entrySelected;
   }
 
+  getShouldDisableSelect(): boolean {
+    return !this.isNodeSelectable(this.repositoryBrowser?.current?.currentFolder as LfRepoTreeNode);
+  }
+
   // react render method
   render() {
     return (
@@ -524,13 +539,25 @@ export default class App extends React.Component<any, { expandFolderBrowser: boo
             <a hidden={!this.state?.lfSelectedFolder} className="open-in-lf-link" href={this.state?.lfSelectedFolder?.selectedNodeUrl} target="_blank"
               rel="noopener noreferrer">{this.OPEN_IN_LASERFICHE}</a>
             <div className="lf-folder-browser-sample-container">
-              {this.state?.expandFolderBrowser && <lf-repository-browser ref={this.repositoryBrowser}
-                ok_button_text="SELECT" cancel_button_text="CANCEL" style={{height: '450px'}}>
-              </lf-repository-browser>}
-              <button className="lf-button primary-button" onClick={this.onOpenNode} hidden={!this.state?.shouldShowOpen}>OPEN
-              </button>
-              <button className="lf-button primary-button" onClick={this.onSelectFolder} hidden={!this.state?.shouldShowSelect}>{this.SELECT}
-              </button>
+              {this.state?.expandFolderBrowser &&
+              <div className="repository-browser"> 
+                <lf-repository-browser ref={this.repositoryBrowser}
+                multiple="false"
+                style={{height: '420px'}}
+                isSelectable={this.isNodeSelectable}>
+              </lf-repository-browser>
+              <div className="repository-browser-button-containers">
+                <span>
+                  <button className="lf-button primary-button" onClick={this.onOpenNode} hidden={!this.state?.shouldShowOpen}>OPEN
+                  </button>
+                  <button className="lf-button primary-button" onClick={this.onSelectFolder} hidden={!this.state?.shouldShowSelect}
+                  disabled={this.state?.shouldDisableSelect}>{this.SELECT}
+                  </button>
+                  <button className="sec-button lf-button margin-left-button" hidden={!this.state?.expandFolderBrowser}
+                  onClick={this.onClickCancelButton}>CANCEL</button>
+                </span>
+              </div>
+              </div>}
             </div>
           </div>
 
