@@ -18,9 +18,13 @@ const resources: Map<string, object> = new Map<string, object>([
     'FILE_NAME': 'File Name: ',
     'BROWSE': 'Browse',
     'OPEN_IN_LASERFICHE': 'Open in Laserfiche',
+    'OPEN': 'Open',
+    'REFRESH': 'Refresh',
+    'NEW_FOLDER': 'New Folder',
     'SELECT': 'Select',
     'CANCEL': 'Cancel',
-    'ERROR_SAVING': 'Error Saving'
+    'ERROR_SAVING': 'Error Saving',
+    'UNKNOWN_ERROR': 'Unknown Error'
   }],
   ['es-MX', {
     'FOLDER_BROWSER_PLACEHOLDER': 'No folder selected - Spanish',
@@ -30,9 +34,13 @@ const resources: Map<string, object> = new Map<string, object>([
     'FILE_NAME': 'File Name: - Spanish',
     'BROWSE': 'Browse - Spanish',
     'OPEN_IN_LASERFICHE': 'Open in Laserfiche - Spanish',
+    'OPEN': 'Open - Spanish',
+    'REFRESH': 'Refresh - Spanish',
+    'NEW_FOLDER': 'New Folder - Spanish',
     'SELECT': 'Select - Spanish',
     'CANCEL': 'Cancel - Spanish',
-    'ERROR_SAVING': 'Error Saving - Spanish'
+    'ERROR_SAVING': 'Error Saving - Spanish',
+    'UNKNOWN_ERROR': 'Unknown Error - Spanish'
   }]
 ]);
 
@@ -375,7 +383,7 @@ any,
     if (this.toolBarElement.current) {
       this.toolBarElement.current.dropdown_options = [
         {
-          name: 'refresh',
+          name: this.REFRESH,
           disabled: false,
           tag: {
             handler: async () => {
@@ -385,7 +393,7 @@ any,
           }
         },
         {
-          name: 'new folder',
+          name: this.NEW_FOLDER,
           disabled: false,
           tag: {
             handler: () => { this.setState({show: true}); }
@@ -564,7 +572,12 @@ any,
         this.setState({show: false});
       }
       catch (e: any) {
-        this.setState({popupErrorMessage: e.title});
+        if (e.title) {
+          this.setState({popupErrorMessage: e.title});
+        }
+        else {
+          this.setState({popupErrorMessage: this.UNKNOWN_ERROR});
+        }
       }
 
     }
@@ -651,13 +664,13 @@ test: string = 'test';
                 </div>
                 <div className="repository-browser-button-containers">
                   <span>
-                    <button className="lf-button primary-button" onClick={this.onOpenNode} hidden={!this.state?.shouldShowOpen}>OPEN
+                    <button className="lf-button primary-button" onClick={this.onOpenNode} hidden={!this.state?.shouldShowOpen}>{this.OPEN}
                     </button>
                     <button className="lf-button primary-button" onClick={this.onSelectFolder} hidden={!this.state?.shouldShowSelect}
                     disabled={this.state?.shouldDisableSelect}>{this.SELECT}
                     </button>
                     <button className="sec-button lf-button margin-left-button" hidden={!this.state?.expandFolderBrowser}
-                    onClick={this.onClickCancelButton}>CANCEL</button>
+                    onClick={this.onClickCancelButton}>{this.CANCEL}</button>
                   </span>
                 </div>
               </div>}
@@ -685,7 +698,10 @@ test: string = 'test';
   SELECTED_FOLDER = this.localizationService.getString('SELECTED_FOLDER');
   FILE_NAME = this.localizationService.getString('FILE_NAME');
   OPEN_IN_LASERFICHE = this.localizationService.getString('OPEN_IN_LASERFICHE');
+  OPEN = this.localizationService.getString('OPEN');
+  REFRESH = this.localizationService.getString('REFRESH');
+  NEW_FOLDER = this.localizationService.getString('NEW_FOLDER');
   SELECT = this.localizationService.getString('SELECT');
   CANCEL = this.localizationService.getString('CANCEL');
-
+  UNKNOWN_ERROR = this.localizationService.getString('UNKNOWN_ERROR');
 }
