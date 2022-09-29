@@ -623,7 +623,7 @@ test: string = 'test';
         </div>
 
         <div hidden={!this.state?.isLoggedIn}>
-          <Modal show={this.state?.show} onClose={this.hideDialog.bind(this)} errorMessage={this.state?.popupErrorMessage}/>
+          {this.state?.show && <Modal onClose={this.hideDialog.bind(this)} errorMessage={this.state?.popupErrorMessage}/>}
           <button className="lf-refresh-button" onClick={() => this.onClickRefreshAsync()}>Refresh</button>
           <div className="folder-browse-select lf-component-container">
             <span>

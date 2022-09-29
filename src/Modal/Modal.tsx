@@ -16,9 +16,8 @@ const resources: Map<string, object> = new Map<string, object>([
     'NEW_FOLDER': 'New Folder - Spanish',
   }]
 ]);
-export default class Modal extends React.Component<{show: boolean; onClose: (folderName?: string) => void; errorMessage: string}, {folderName: string}> {
+export default class Modal extends React.Component<{onClose: (folderName?: string) => void; errorMessage: string}, {folderName: string}> {
 
-    newFolderNameInput: React.RefObject<HTMLInputElement>;
     localizationService: LfLocalizationService = new LfLocalizationService(resources);
     closeOnEscapeKeyDown = (e:KeyboardEvent) => {
         if ((e.code === 'Escape')) {
@@ -29,12 +28,13 @@ export default class Modal extends React.Component<{show: boolean; onClose: (fol
     constructor(props: any) {
         super(props);
         this.setState({folderName: ''});
-        this.newFolderNameInput = React.createRef();
     }
 
     componentDidMount() {
+      setTimeout(() => {
         document.body.addEventListener("keydown", this.closeOnEscapeKeyDown);
-        this.newFolderNameInput.current?.focus();
+        document.getElementById('new-folder-name-input')?.focus();
+      });
     }
 
     handleInputChange = (event: any) => {
@@ -47,9 +47,6 @@ export default class Modal extends React.Component<{show: boolean; onClose: (fol
     };
 
     render() {
-    if (!this.props.show) {
-        return null;
-    }
 
     return (
       <div className="new-folder-dialog-modal" onClick={() => this.props.onClose()}>
@@ -63,7 +60,7 @@ export default class Modal extends React.Component<{show: boolean; onClose: (fol
           <div className="lf-dialog-message">
             <p hidden={!this.props.errorMessage} className="popup-error">{this.props.errorMessage}</p>  
             <p className="new-folder-label">{this.NAME}</p>
-                <input ref={this.newFolderNameInput} className="new-folder-name-input" onChange={this.handleInputChange} ></input>
+                <input id="new-folder-name-input" className="new-folder-name-input" onChange={this.handleInputChange} ></input>
         </div>
         <div className="lf-dialog-actions">
             <button onClick={() => this.props.onClose(this.state?.folderName)} disabled={!this.state?.folderName || this.state?.folderName.trim().length === 0} className="lf-button primary-button">{this.OK}</button>
