@@ -1,7 +1,7 @@
 import React from "react";
 import './Modal.css';
 
-export default class Modal extends React.Component<{show: boolean; onClose: (folderName?: string) => void}, {folderName: string}> {
+export default class Modal extends React.Component<{show: boolean; onClose: (folderName?: string) => void; errorMessage: string}, {folderName: string}> {
 
     newFolderNameInput: React.RefObject<HTMLInputElement>;
     closeOnEscapeKeyDown = (e:KeyboardEvent) => {
@@ -45,11 +45,12 @@ export default class Modal extends React.Component<{show: boolean; onClose: (fol
             </button>
             </div>
           <div className="lf-dialog-message">
+            <p hidden={!this.props.errorMessage} className="popup-error">{this.props.errorMessage}</p>  
             <p className="new-folder-label">Name</p>
                 <input ref={this.newFolderNameInput} className="new-folder-name-input" onChange={this.handleInputChange} ></input>
         </div>
         <div className="lf-dialog-actions">
-            <button onClick={() => this.props.onClose(this.state?.folderName)} className="lf-button primary-button">OK</button>
+            <button onClick={() => this.props.onClose(this.state?.folderName)} disabled={!this.state?.folderName || this.state?.folderName.trim().length === 0} className="lf-button primary-button">OK</button>
             <button onClick={() => this.props.onClose()} className="lf-button sec-button margin-left-button">Cancel</button>
         </div>
         </div>

@@ -58,7 +58,8 @@ any,
   shouldShowOpen: boolean; 
   shouldShowSelect: boolean; 
   shouldDisableSelect: boolean; 
-  show: boolean; 
+  show: boolean;
+  popupErrorMessage: string;
 }> {
   REDIRECT_URI: string = 'REPLACE_WITH_YOUR_REDIRECT_URI'; // i.e http://localhost:3000, https://serverName/lf-sample/index.html
   CLIENT_ID: string = 'REPLACE_WITH_YOUR_CLIENT_ID';
@@ -97,6 +98,7 @@ any,
       shouldShowSelect: false,
       shouldDisableSelect: false,
       show: false,
+      popupErrorMessage: ''
     });
   }
 
@@ -556,8 +558,15 @@ any,
       if (!this.repositoryBrowser?.current?.currentFolder) {
         throw new Error('repositoryBrowser has no currently opened folder.');
       }
-      await this.addNewFolderAsync(this.repositoryBrowser?.current?.currentFolder, folderName);
-      await this.repositoryBrowser?.current.refreshAsync();
+      try {
+        await this.addNewFolderAsync(this.repositoryBrowser?.current?.currentFolder, folderName);
+        await this.repositoryBrowser?.current.refreshAsync();
+        this.setState({show: false});
+      }
+      catch (e: any) {
+        this.setState({popupErrorMessage: e.title});
+      }
+
     }
     else {
       this.setState({show: false});
@@ -576,14 +585,13 @@ any,
         })
     };
     const repoId: string = await this.repoClient.getCurrentRepoId();
-    const result = await this.repoClient?.entriesClient.createOrCopyEntry(
+    await this.repoClient?.entriesClient.createOrCopyEntry(
         {
             repoId,
             entryId: requestParameters.entryId,
             request: requestParameters.postEntryChildrenRequest
         }
     );
-    // TODO: add error handling
 }
 
 test: string = 'test';
@@ -602,7 +610,7 @@ test: string = 'test';
         </div>
 
         <div hidden={!this.state?.isLoggedIn}>
-          <Modal show={this.state?.show} onClose={this.hideDialog.bind(this)}/>
+          <Modal show={this.state?.show} onClose={this.hideDialog.bind(this)} errorMessage={this.state?.popupErrorMessage}/>
           <button className="lf-refresh-button" onClick={() => this.onClickRefreshAsync()}>Refresh</button>
           <div className="folder-browse-select lf-component-container">
             <span>
