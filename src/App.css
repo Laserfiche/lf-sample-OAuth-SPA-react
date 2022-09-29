@@ -67,3 +67,18 @@ svg#close {
 .margin-left-button {
   margin-left: 10px;
 }
+
+.repo-browser-with-toolbar {
+  position: relative;
+  height: 420px;
+  width: 100%;
+}
+lf-toolbar {
+  position: absolute;
+  right: 0;
+}
+
+lf-repository-browser {
+  position: absolute;
+  left: 0
+}

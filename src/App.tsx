@@ -1,12 +1,13 @@
 import React from 'react';
 import './App.css';
-import { LfFieldContainerComponent, LfLoginComponent, LfRepositoryBrowserComponent } from '@laserfiche/types-lf-ui-components';
+import { LfFieldContainerComponent, LfLoginComponent, LfRepositoryBrowserComponent, LfToolbarComponent, LfTreeNode, ToolbarOption } from '@laserfiche/types-lf-ui-components';
 import { NgElement, WithProperties } from '@angular/elements';
 import { LfLocalizationService } from '@laserfiche/lf-js-utils';
 import { IRepositoryApiClientEx, LfFieldsService, LfRepoTreeNode, LfRepoTreeNodeService } from '@laserfiche/lf-ui-components-services';
 import { PathUtils } from '@laserfiche/lf-js-utils';
-import { PostEntryWithEdocMetadataRequest, RepositoryApiClient, FileParameter, PutFieldValsRequest, IRepositoryApiClient, FieldToUpdate, ValueToUpdate, EntryType, Shortcut } from '@laserfiche/lf-repository-api-client';
+import { PostEntryWithEdocMetadataRequest, RepositoryApiClient, FileParameter, PutFieldValsRequest, IRepositoryApiClient, FieldToUpdate, ValueToUpdate, EntryType, Shortcut, PostEntryChildrenRequest, PostEntryChildrenEntryType } from '@laserfiche/lf-repository-api-client';
 import { getEntryWebAccessUrl } from './url-utils';
+import Modal from './Modal/Modal';
 
 const resources: Map<string, object> = new Map<string, object>([
   ['en-US', {
@@ -47,7 +48,18 @@ interface ILfSelectedFolder {
   selectedFolderName: string; // name of the selected folder
 }
 
-export default class App extends React.Component<any, { expandFolderBrowser: boolean; lfSelectedFolder?: ILfSelectedFolder; selectedFile?: File; isLoggedIn: boolean; shouldShowOpen: boolean; shouldShowSelect: boolean; shouldDisableSelect: boolean}> {
+export default class App extends React.Component<
+any, 
+{ 
+  expandFolderBrowser: boolean;
+  lfSelectedFolder?: ILfSelectedFolder; 
+  selectedFile?: File; 
+  isLoggedIn: boolean; 
+  shouldShowOpen: boolean; 
+  shouldShowSelect: boolean; 
+  shouldDisableSelect: boolean; 
+  show: boolean; 
+}> {
   REDIRECT_URI: string = 'REPLACE_WITH_YOUR_REDIRECT_URI'; // i.e http://localhost:3000, https://serverName/lf-sample/index.html
   CLIENT_ID: string = 'REPLACE_WITH_YOUR_CLIENT_ID';
   HOST_NAME: string = ''; // only add this if you are using a different region or environment (i.e. laserfiche.ca, eu.laserfiche.com)
@@ -64,13 +76,15 @@ export default class App extends React.Component<any, { expandFolderBrowser: boo
   fieldsService?: LfFieldsService;
   localizationService: LfLocalizationService = new LfLocalizationService(resources);
   entrySelected: LfRepoTreeNode | undefined;
-  
+  toolBarElement: React.RefObject<NgElement & WithProperties<LfToolbarComponent>>;
+
   constructor(props: any) {
     super(props);
     this.loginComponent = React.createRef();
     this.repositoryBrowser = React.createRef();
     this.fileInput = React.createRef();
     this.fieldContainer = React.createRef();
+    this.toolBarElement = React.createRef();
     this.setState({
       expandFolderBrowser: false, 
       isLoggedIn: false, 
@@ -81,7 +95,8 @@ export default class App extends React.Component<any, { expandFolderBrowser: boo
       }, 
       shouldShowOpen: false, 
       shouldShowSelect: false,
-      shouldDisableSelect: false
+      shouldDisableSelect: false,
+      show: false,
     });
   }
 
@@ -291,6 +306,7 @@ export default class App extends React.Component<any, { expandFolderBrowser: boo
   onClickBrowse = async () => {
     this.setState({ expandFolderBrowser: true}, async () => {
       await this.initializeTreeAsync();
+      this.initializeToolbar();
     });
     this.setState({
       shouldShowOpen: this.getShouldShowOpen(),
@@ -317,14 +333,14 @@ export default class App extends React.Component<any, { expandFolderBrowser: boo
         focusedNode = this.lfRepoTreeService?.createLfRepoTreeNode(focusedNodeEntry, repoName);
       }
     }
-    await this.repositoryBrowser?.current?.initAsync(this.lfRepoTreeService!, focusedNode);
-  }
+      await this.repositoryBrowser?.current?.initAsync(this.lfRepoTreeService!, focusedNode);
+    }
 
   isNodeSelectable = (node: LfRepoTreeNode) => {
-    if (node.entryType == EntryType.Folder) {
+    if (node?.entryType == EntryType.Folder) {
       return true;
     }
-    else if (node.entryType == EntryType.Shortcut && node.targetType == EntryType.Folder) {
+    else if (node?.entryType == EntryType.Shortcut && node?.targetType == EntryType.Folder) {
       return true;
     }
     else {
@@ -353,6 +369,36 @@ export default class App extends React.Component<any, { expandFolderBrowser: boo
     document.body.style.overflow = 'auto';
   };
 
+  private initializeToolbar() {
+    if (this.toolBarElement.current) {
+      this.toolBarElement.current.dropdown_options = [
+        {
+          name: 'refresh',
+          disabled: false,
+          tag: {
+            handler: async () => {
+              await this.repositoryBrowser?.current?.refreshAsync();
+              console.log('refresh');
+            },
+          }
+        },
+        {
+          name: 'new folder',
+          disabled: false,
+          tag: {
+            handler: () => { this.setState({show: true}); }
+          }
+        },
+      ];      
+      this.toolBarElement.current.addEventListener('optionSelected', this.handleToolBarOption);
+    }
+  }
+
+  handleToolBarOption = async (event: any) => {
+    const toolbarSelected: ToolbarOption = event.detail;
+    await toolbarSelected.tag.handler();
+  };
+  
   private async createMetadataRequestAsync(): Promise<PostEntryWithEdocMetadataRequest> {
     const fieldValues = this.fieldContainer?.current?.getFieldValues() ?? {};
     const templateName = this.fieldContainer?.current?.getTemplateValue()?.name ?? '';
@@ -492,9 +538,55 @@ export default class App extends React.Component<any, { expandFolderBrowser: boo
   }
 
   getShouldDisableSelect(): boolean {
-    return !this.isNodeSelectable(this.repositoryBrowser?.current?.currentFolder as LfRepoTreeNode);
+    if (this.repositoryBrowser?.current?.currentFolder) {
+      return !this.isNodeSelectable(this.repositoryBrowser.current.currentFolder as LfRepoTreeNode);
+    }
+    else {
+      return true;
+    }   
   }
 
+  showDialog = () => {
+    this.setState({show: true});
+  };
+
+  hideDialog = async (folderName?: string) => {
+
+    if (folderName) {
+      if (!this.repositoryBrowser?.current?.currentFolder) {
+        throw new Error('repositoryBrowser has no currently opened folder.');
+      }
+      await this.addNewFolderAsync(this.repositoryBrowser?.current?.currentFolder, folderName);
+      await this.repositoryBrowser?.current.refreshAsync();
+    }
+    else {
+      this.setState({show: false});
+    }
+  };
+
+  async addNewFolderAsync(parentNode: LfTreeNode, folderName: string): Promise<void> {
+    if (!this.repoClient) {
+      throw new Error('repoClient is undefined');
+    }
+    const requestParameters: { entryId: number; postEntryChildrenRequest: PostEntryChildrenRequest } = {
+        entryId: parseInt(parentNode.id, 10),
+        postEntryChildrenRequest: new PostEntryChildrenRequest({
+            name: folderName,
+            entryType: PostEntryChildrenEntryType.Folder
+        })
+    };
+    const repoId: string = await this.repoClient.getCurrentRepoId();
+    const result = await this.repoClient?.entriesClient.createOrCopyEntry(
+        {
+            repoId,
+            entryId: requestParameters.entryId,
+            request: requestParameters.postEntryChildrenRequest
+        }
+    );
+    // TODO: add error handling
+}
+
+test: string = 'test';
   // react render method
   render() {
     return (
@@ -510,7 +602,7 @@ export default class App extends React.Component<any, { expandFolderBrowser: boo
         </div>
 
         <div hidden={!this.state?.isLoggedIn}>
-
+          <Modal show={this.state?.show} onClose={this.hideDialog.bind(this)}/>
           <button className="lf-refresh-button" onClick={() => this.onClickRefreshAsync()}>Refresh</button>
           <div className="folder-browse-select lf-component-container">
             <span>
@@ -540,23 +632,26 @@ export default class App extends React.Component<any, { expandFolderBrowser: boo
               rel="noopener noreferrer">{this.OPEN_IN_LASERFICHE}</a>
             <div className="lf-folder-browser-sample-container">
               {this.state?.expandFolderBrowser &&
-              <div className="repository-browser"> 
+              <div className="repository-browser">
+                <div className='repo-browser-with-toolbar'>
                 <lf-repository-browser ref={this.repositoryBrowser}
-                multiple="false"
-                style={{height: '420px'}}
-                isSelectable={this.isNodeSelectable}>
-              </lf-repository-browser>
-              <div className="repository-browser-button-containers">
-                <span>
-                  <button className="lf-button primary-button" onClick={this.onOpenNode} hidden={!this.state?.shouldShowOpen}>OPEN
-                  </button>
-                  <button className="lf-button primary-button" onClick={this.onSelectFolder} hidden={!this.state?.shouldShowSelect}
-                  disabled={this.state?.shouldDisableSelect}>{this.SELECT}
-                  </button>
-                  <button className="sec-button lf-button margin-left-button" hidden={!this.state?.expandFolderBrowser}
-                  onClick={this.onClickCancelButton}>CANCEL</button>
-                </span>
-              </div>
+                  multiple="false"
+                  style={{height: '420px'}}
+                  isSelectable={this.isNodeSelectable}>
+                </lf-repository-browser>
+                <lf-toolbar ref={this.toolBarElement}></lf-toolbar>
+                </div>
+                <div className="repository-browser-button-containers">
+                  <span>
+                    <button className="lf-button primary-button" onClick={this.onOpenNode} hidden={!this.state?.shouldShowOpen}>OPEN
+                    </button>
+                    <button className="lf-button primary-button" onClick={this.onSelectFolder} hidden={!this.state?.shouldShowSelect}
+                    disabled={this.state?.shouldDisableSelect}>{this.SELECT}
+                    </button>
+                    <button className="sec-button lf-button margin-left-button" hidden={!this.state?.expandFolderBrowser}
+                    onClick={this.onClickCancelButton}>CANCEL</button>
+                  </span>
+                </div>
               </div>}
             </div>
           </div>
