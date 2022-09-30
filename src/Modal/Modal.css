@@ -8,39 +8,27 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* opacity: 0;
-    transition: all 0.3s ease-in-out;
-    pointer-events: none; */
+  /* pointer-events: none; */
   z-index: 1000;
 }
-
-.new-folder-dialog-modal.enter-done {
-  opacity: 1;
-  pointer-events: visible;
-}
-
 .new-folder-dialog-modal.exit {
   opacity: 0;
 }
 
 .new-folder-dialog-modal-content {
-  width: 500px;
   background-color: #fff;
   border-radius: 4px;
   padding: 24px;
   width: 430px;
   max-width: 80vw;
-  /* transition: all 0.3s ease-in-out;
-    transform: translateY(-200px); */
+  opacity: 0;
+  transition: all 0.2s ease-in-out;
 }
 
-/* .new-folder-dialog-modal.enter-done .new-folder-dialog-modal-content {
-    transform: translateY(0);
-  }
-  
-  .new-folder-dialog-modal.exit .new-folder-dialog-modal-content {
-    transform: translateY(-200px);
-  } */
+.new-folder-dialog-modal-content.show {
+  opacity: 1;
+  pointer-events: visible;
+}
 
 .new-folder-dialog-modal-header,
 .new-folder-dialog-modal-footer {

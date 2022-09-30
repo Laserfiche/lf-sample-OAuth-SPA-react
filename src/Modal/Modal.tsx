@@ -16,7 +16,7 @@ const resources: Map<string, object> = new Map<string, object>([
     'NEW_FOLDER': 'New Folder - Spanish',
   }]
 ]);
-export default class Modal extends React.Component<{onClose: (folderName?: string) => void; errorMessage: string}, {folderName: string}> {
+export default class Modal extends React.Component<{onClose: (folderName?: string) => void; errorMessage: string}, {folderName: string; open: boolean}> {
 
     localizationService: LfLocalizationService = new LfLocalizationService(resources);
     closeOnEscapeKeyDown = (e:KeyboardEvent) => {
@@ -27,11 +27,14 @@ export default class Modal extends React.Component<{onClose: (folderName?: strin
 
     constructor(props: any) {
         super(props);
-        this.setState({folderName: ''});
+        this.setState({
+          folderName: '',
+          open: false});
     }
 
     componentDidMount() {
       setTimeout(() => {
+        this.setState({open: true});
         document.body.addEventListener("keydown", this.closeOnEscapeKeyDown);
         document.getElementById('new-folder-name-input')?.focus();
       });
@@ -46,14 +49,24 @@ export default class Modal extends React.Component<{onClose: (folderName?: strin
         });
     };
 
+    closeDialog = (folderName?: string) => {
+      this.setState({
+        open: false
+      });
+      setTimeout(() => {
+        this.props.onClose(folderName);
+      }, 200);
+      
+    };
+
     render() {
 
     return (
       <div className="new-folder-dialog-modal" onClick={() => this.props.onClose()}>
-        <div className="new-folder-dialog-modal-content" onClick={e => e.stopPropagation()}>
+        <div className={`new-folder-dialog-modal-content ${this.state?.open ? 'show' : ''}`} onClick={e => e.stopPropagation()}>
             <div className="new-folder-dialog-modal-title"> 
             <span className="lf-dialog-title lf-popup-dialog-title">{this.NEW_FOLDER}</span>
-            <button className="lf-close-button" onClick={() => this.props.onClose()}>
+            <button className="lf-close-button" onClick={() => this.closeDialog()}>
                 <span id="new-folder-dialog-close-icon" className="material-icons">close</span>
             </button>
             </div>
@@ -63,8 +76,8 @@ export default class Modal extends React.Component<{onClose: (folderName?: strin
                 <input id="new-folder-name-input" className="new-folder-name-input" onChange={this.handleInputChange} ></input>
         </div>
         <div className="lf-dialog-actions">
-            <button onClick={() => this.props.onClose(this.state?.folderName)} disabled={!this.state?.folderName || this.state?.folderName.trim().length === 0} className="lf-button primary-button">{this.OK}</button>
-            <button onClick={() => this.props.onClose()} className="lf-button sec-button margin-left-button">{this.CANCEL}</button>
+            <button onClick={() => this.closeDialog(this.state?.folderName)} disabled={!this.state?.folderName || this.state?.folderName.trim().length === 0} className="lf-button primary-button">{this.OK}</button>
+            <button onClick={() => this.closeDialog()} className="lf-button sec-button margin-left-button">{this.CANCEL}</button>
         </div>
         </div>
       </div>

@@ -362,7 +362,8 @@ any,
     await this.repositoryBrowser?.current?.openSelectedNodesAsync();
     this.setState({
       shouldShowOpen:  this.getShouldShowOpen(),
-      shouldShowSelect: this.getShouldShowSelect()
+      shouldShowSelect: this.getShouldShowSelect(),
+      shouldDisableSelect: this.getShouldDisableSelect()
     });
   };
 
@@ -507,7 +508,7 @@ any,
           }
           parentEntryId = shortcut.targetId;
         }
-        await this.repoClient?.entriesClient.importDocument({
+        await this.repoClient.entriesClient.importDocument({
           repoId: (await this.repoClient.getCurrentRepoId()),
           parentEntryId,
           fileName: this.fileName?? '',
@@ -606,8 +607,6 @@ any,
         }
     );
 }
-
-test: string = 'test';
   // react render method
   render() {
     return (
