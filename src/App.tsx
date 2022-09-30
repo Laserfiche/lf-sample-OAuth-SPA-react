@@ -66,7 +66,7 @@ any,
   shouldShowOpen: boolean; 
   shouldShowSelect: boolean; 
   shouldDisableSelect: boolean; 
-  show: boolean;
+  showNewFolderDialog: boolean;
   popupErrorMessage: string;
 }> {
   REDIRECT_URI: string = 'REPLACE_WITH_YOUR_REDIRECT_URI'; // i.e http://localhost:3000, https://serverName/lf-sample/index.html
@@ -97,15 +97,11 @@ any,
     this.setState({
       expandFolderBrowser: false, 
       isLoggedIn: false, 
-      lfSelectedFolder: {
-        selectedNodeUrl: '', 
-        selectedFolderPath: '', 
-        selectedFolderName: ''
-      }, 
+      lfSelectedFolder: undefined, 
       shouldShowOpen: false, 
       shouldShowSelect: false,
       shouldDisableSelect: false,
-      show: false,
+      showNewFolderDialog: false,
       popupErrorMessage: ''
     });
   }
@@ -302,26 +298,18 @@ any,
   onEntrySelected = (event: any) => {
     const treeNodesSelected: LfRepoTreeNode[] = event.detail;
     this.entrySelected = treeNodesSelected?.length > 0 ? treeNodesSelected[0] : undefined;
-    this.setState({
-      shouldShowOpen: this.getShouldShowOpen(),
-      shouldShowSelect: this.getShouldShowSelect(),
-      shouldDisableSelect: this.getShouldDisableSelect(),
-    });
-  };
-  
-  folderCancelClick = () => {
-    this.setState({ expandFolderBrowser: false });
+    this.setShouldShowOpen();
+    this.setShouldShowSelect();
+    this.setShouldDisableSelect();
   };
 
   onClickBrowse = async () => {
     this.setState({ expandFolderBrowser: true}, async () => {
       await this.initializeTreeAsync();
       this.initializeToolbar();
-    });
-    this.setState({
-      shouldShowOpen: this.getShouldShowOpen(),
-      shouldShowSelect: this.getShouldShowSelect(),
-      shouldDisableSelect: this.getShouldDisableSelect()
+      this.setShouldShowOpen();
+      this.setShouldShowSelect();
+      this.setShouldDisableSelect();
     });
   };
 
@@ -360,11 +348,9 @@ any,
 
   onOpenNode = async () => {
     await this.repositoryBrowser?.current?.openSelectedNodesAsync();
-    this.setState({
-      shouldShowOpen:  this.getShouldShowOpen(),
-      shouldShowSelect: this.getShouldShowSelect(),
-      shouldDisableSelect: this.getShouldDisableSelect()
-    });
+    this.setShouldShowOpen();
+    this.setShouldShowSelect();
+    this.setShouldDisableSelect();
   };
 
   // metadata handlers
@@ -397,7 +383,7 @@ any,
           name: this.NEW_FOLDER,
           disabled: false,
           tag: {
-            handler: () => { this.setState({show: true}); }
+            handler: () => { this.setState({showNewFolderDialog: true}); }
           }
         },
       ];      
@@ -494,7 +480,7 @@ any,
         const repoId = await this.repoClient.getCurrentRepoId();
         const currentSelectedByPathResponse = await this.repoClient.entriesClient.getEntryByPath({
           repoId,
-          fullPath: this.state?.lfSelectedFolder.selectedFolderPath
+          fullPath: this.state.lfSelectedFolder.selectedFolderPath
         });
         const currentSelectedEntry = currentSelectedByPathResponse.entry;
         if (!currentSelectedEntry?.id) {
@@ -540,25 +526,33 @@ any,
     await this.loginComponent.current?.refreshTokenAsync(true);
   }
 
-  getShouldShowSelect(): boolean {
-    return !this.entrySelected && !!this.repositoryBrowser?.current?.currentFolder;
+  setShouldShowSelect(): void {
+    this.setState({
+      shouldShowSelect: !this.entrySelected && !!this.repositoryBrowser?.current?.currentFolder
+    });
   }
 
-  getShouldShowOpen(): boolean {
-    return !!this.entrySelected;
+  setShouldShowOpen(): void {
+    this.setState({
+      shouldShowOpen: !!this.entrySelected
+    });
   }
 
-  getShouldDisableSelect(): boolean {
+  setShouldDisableSelect(): void {
     if (this.repositoryBrowser?.current?.currentFolder) {
-      return !this.isNodeSelectable(this.repositoryBrowser.current.currentFolder as LfRepoTreeNode);
+      this.setState({
+        shouldDisableSelect: !this.isNodeSelectable(this.repositoryBrowser.current.currentFolder as LfRepoTreeNode)
+      });
     }
     else {
-      return true;
+      this.setState({
+        shouldDisableSelect: true
+      });
     }   
   }
 
   showDialog = () => {
-    this.setState({show: true});
+    this.setState({showNewFolderDialog: true});
   };
 
   hideDialog = async (folderName?: string) => {
@@ -570,7 +564,7 @@ any,
       try {
         await this.addNewFolderAsync(this.repositoryBrowser?.current?.currentFolder, folderName);
         await this.repositoryBrowser?.current.refreshAsync();
-        this.setState({show: false});
+        this.setState({showNewFolderDialog: false});
       }
       catch (e: any) {
         if (e.title) {
@@ -583,7 +577,7 @@ any,
 
     }
     else {
-      this.setState({show: false});
+      this.setState({showNewFolderDialog: false});
     }
   };
 
@@ -622,7 +616,7 @@ any,
         </div>
 
         <div hidden={!this.state?.isLoggedIn}>
-          {this.state?.show && <Modal onClose={this.hideDialog.bind(this)} errorMessage={this.state?.popupErrorMessage}/>}
+          {this.state?.showNewFolderDialog && <Modal onClose={this.hideDialog.bind(this)} errorMessage={this.state?.popupErrorMessage}/>}
           <button className="lf-refresh-button" onClick={() => this.onClickRefreshAsync()}>Refresh</button>
           <div className="folder-browse-select lf-component-container">
             <span>

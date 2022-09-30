@@ -1,5 +1,5 @@
 import { LfLocalizationService } from "@laserfiche/lf-js-utils";
-import React from "react";
+import React, { ChangeEvent } from "react";
 import './Modal.css';
 
 const resources: Map<string, object> = new Map<string, object>([
@@ -16,7 +16,7 @@ const resources: Map<string, object> = new Map<string, object>([
     'NEW_FOLDER': 'New Folder - Spanish',
   }]
 ]);
-export default class Modal extends React.Component<{onClose: (folderName?: string) => void; errorMessage: string}, {folderName: string; open: boolean}> {
+export default class Modal extends React.Component<{onClose: (folderName?: string) => Promise<void>; errorMessage: string}, {folderName: string; open: boolean}> {
 
     localizationService: LfLocalizationService = new LfLocalizationService(resources);
     closeOnEscapeKeyDown = (e:KeyboardEvent) => {
@@ -33,19 +33,19 @@ export default class Modal extends React.Component<{onClose: (folderName?: strin
     }
 
     componentDidMount() {
+      document.body.addEventListener("keydown", this.closeOnEscapeKeyDown);
       setTimeout(() => {
         this.setState({open: true});
-        document.body.addEventListener("keydown", this.closeOnEscapeKeyDown);
         document.getElementById('new-folder-name-input')?.focus();
       });
     }
 
-    handleInputChange = (event: any) => {
-        const target = event.target;
-        const value = target.value;
+    handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const target = event.target as HTMLInputElement;
+        const folderName = target?.value;
 
         this.setState({
-          folderName: value
+          folderName: folderName
         });
     };
 
@@ -62,7 +62,7 @@ export default class Modal extends React.Component<{onClose: (folderName?: strin
     render() {
 
     return (
-      <div className="new-folder-dialog-modal" onClick={() => this.props.onClose()}>
+      <div className="new-folder-dialog-modal" aria-hidden='true' onClick={() => this.props.onClose()}>
         <div className={`new-folder-dialog-modal-content ${this.state?.open ? 'show' : ''}`} onClick={e => e.stopPropagation()}>
             <div className="new-folder-dialog-modal-title"> 
             <span className="lf-dialog-title lf-popup-dialog-title">{this.NEW_FOLDER}</span>
@@ -73,7 +73,7 @@ export default class Modal extends React.Component<{onClose: (folderName?: strin
           <div className="lf-dialog-message">
             <p hidden={!this.props.errorMessage} className="popup-error">{this.props.errorMessage}</p>  
             <p className="new-folder-label">{this.NAME}</p>
-                <input id="new-folder-name-input" className="new-folder-name-input" onChange={this.handleInputChange} ></input>
+                <input id="new-folder-name-input" className="new-folder-name-input" onChange={e => this.handleInputChange(e)} ></input>
         </div>
         <div className="lf-dialog-actions">
             <button onClick={() => this.closeDialog(this.state?.folderName)} disabled={!this.state?.folderName || this.state?.folderName.trim().length === 0} className="lf-button primary-button">{this.OK}</button>
