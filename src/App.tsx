@@ -300,7 +300,6 @@ any,
     this.entrySelected = treeNodesSelected?.length > 0 ? treeNodesSelected[0] : undefined;
     this.setShouldShowOpen();
     this.setShouldShowSelect();
-    this.setShouldDisableSelect();
   };
 
   onClickBrowse = async () => {
@@ -309,7 +308,6 @@ any,
       this.initializeToolbar();
       this.setShouldShowOpen();
       this.setShouldShowSelect();
-      this.setShouldDisableSelect();
     });
   };
 
@@ -350,7 +348,6 @@ any,
     await this.repositoryBrowser?.current?.openSelectedNodesAsync();
     this.setShouldShowOpen();
     this.setShouldShowSelect();
-    this.setShouldDisableSelect();
   };
 
   // metadata handlers
@@ -538,19 +535,6 @@ any,
     });
   }
 
-  setShouldDisableSelect(): void {
-    if (this.repositoryBrowser?.current?.currentFolder) {
-      this.setState({
-        shouldDisableSelect: !this.isNodeSelectable(this.repositoryBrowser.current.currentFolder as LfRepoTreeNode)
-      });
-    }
-    else {
-      this.setState({
-        shouldDisableSelect: true
-      });
-    }   
-  }
-
   showDialog = () => {
     this.setState({showNewFolderDialog: true});
   };
@@ -659,8 +643,8 @@ any,
                   <span>
                     <button className="lf-button primary-button" onClick={this.onOpenNode} hidden={!this.state?.shouldShowOpen}>{this.OPEN}
                     </button>
-                    <button className="lf-button primary-button" onClick={this.onSelectFolder} hidden={!this.state?.shouldShowSelect}
-                    disabled={this.state?.shouldDisableSelect}>{this.SELECT}
+                    <button className="lf-button primary-button" onClick={this.onSelectFolder} hidden={!this.state?.shouldShowSelect}>
+                      {this.SELECT}
                     </button>
                     <button className="sec-button lf-button margin-left-button" hidden={!this.state?.expandFolderBrowser}
                     onClick={this.onClickCancelButton}>{this.CANCEL}</button>
