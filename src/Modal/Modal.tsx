@@ -34,6 +34,11 @@ export default class Modal extends React.Component<{onClose: (folderName?: strin
 
     componentDidMount() {
       document.body.addEventListener("keydown", this.closeOnEscapeKeyDown);
+      const container = document.getElementById('new-folder-dialog-content');
+      container?.addEventListener("focusout", (ev)=>{
+        if (!container.contains(ev.relatedTarget as Node)) 
+        document.getElementById('new-folder-dialog-modal-close-dialog')?.focus();
+      });
       setTimeout(() => {
         this.setState({open: true});
         document.getElementById('new-folder-name-input')?.focus();
@@ -62,11 +67,11 @@ export default class Modal extends React.Component<{onClose: (folderName?: strin
     render() {
 
     return (
-      <div className="new-folder-dialog-modal" aria-hidden='true' onClick={() => this.props.onClose()}>
-        <div className={`new-folder-dialog-modal-content ${this.state?.open ? 'show' : ''}`} onClick={e => e.stopPropagation()}>
+      <div className="new-folder-dialog-modal" onClick={() => this.closeDialog()}>
+        <div className={`new-folder-dialog-modal-content ${this.state?.open ? 'show' : ''}`} id="new-folder-dialog-content" onClick={e => e.stopPropagation()}>
             <div className="new-folder-dialog-modal-title"> 
             <span className="lf-dialog-title lf-popup-dialog-title">{this.NEW_FOLDER}</span>
-            <button className="lf-close-button" onClick={() => this.closeDialog()}>
+            <button className="lf-close-button" id="new-folder-dialog-modal-close-dialog" onClick={() => this.closeDialog()}>
                 <span id="new-folder-dialog-close-icon" className="material-icons">close</span>
             </button>
             </div>
