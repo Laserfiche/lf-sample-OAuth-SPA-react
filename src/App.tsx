@@ -1,12 +1,13 @@
 import React from 'react';
 import './App.css';
-import { LfFieldContainerComponent, LfFileExplorerComponent, LfLoginComponent, TreeNode } from '@laserfiche/types-lf-ui-components';
+import { LfFieldContainerComponent, LfLoginComponent, LfRepositoryBrowserComponent, LfToolbarComponent, LfTreeNode, ToolbarOption } from '@laserfiche/types-lf-ui-components';
 import { NgElement, WithProperties } from '@angular/elements';
 import { LfLocalizationService } from '@laserfiche/lf-js-utils';
-import { IRepositoryApiClientEx, LfFieldsService, LfFolder, LfRepoTreeEntryType, LfRepoTreeService } from '@laserfiche/lf-ui-components-services';
+import { IRepositoryApiClientEx, LfFieldsService, LfRepoTreeNode, LfRepoTreeNodeService } from '@laserfiche/lf-ui-components-services';
 import { PathUtils } from '@laserfiche/lf-js-utils';
-import { PostEntryWithEdocMetadataRequest, RepositoryApiClient, FileParameter, PutFieldValsRequest, IRepositoryApiClient, FieldToUpdate, ValueToUpdate } from '@laserfiche/lf-repository-api-client';
+import { PostEntryWithEdocMetadataRequest, RepositoryApiClient, FileParameter, PutFieldValsRequest, IRepositoryApiClient, FieldToUpdate, ValueToUpdate, EntryType, Shortcut, PostEntryChildrenRequest, PostEntryChildrenEntryType } from '@laserfiche/lf-repository-api-client';
 import { getEntryWebAccessUrl } from './url-utils';
+import Modal from './Modal/Modal';
 
 const resources: Map<string, object> = new Map<string, object>([
   ['en-US', {
@@ -17,9 +18,13 @@ const resources: Map<string, object> = new Map<string, object>([
     'FILE_NAME': 'File Name: ',
     'BROWSE': 'Browse',
     'OPEN_IN_LASERFICHE': 'Open in Laserfiche',
+    'OPEN': 'Open',
+    'REFRESH': 'Refresh',
+    'NEW_FOLDER': 'New Folder',
     'SELECT': 'Select',
     'CANCEL': 'Cancel',
-    'ERROR_SAVING': 'Error Saving'
+    'ERROR_SAVING': 'Error Saving',
+    'UNKNOWN_ERROR': 'Unknown Error'
   }],
   ['es-MX', {
     'FOLDER_BROWSER_PLACEHOLDER': 'No folder selected - Spanish',
@@ -29,9 +34,13 @@ const resources: Map<string, object> = new Map<string, object>([
     'FILE_NAME': 'File Name: - Spanish',
     'BROWSE': 'Browse - Spanish',
     'OPEN_IN_LASERFICHE': 'Open in Laserfiche - Spanish',
+    'OPEN': 'Open - Spanish',
+    'REFRESH': 'Refresh - Spanish',
+    'NEW_FOLDER': 'New Folder - Spanish',
     'SELECT': 'Select - Spanish',
     'CANCEL': 'Cancel - Spanish',
-    'ERROR_SAVING': 'Error Saving - Spanish'
+    'ERROR_SAVING': 'Error Saving - Spanish',
+    'UNKNOWN_ERROR': 'Unknown Error - Spanish'
   }]
 ]);
 
@@ -41,33 +50,60 @@ interface IRepositoryApiClientExInternal extends IRepositoryApiClientEx {
   _repoName?: string;
 }
 
-export default class App extends React.Component<{}, { expandFolderBrowser: boolean, selectedFolder: LfFolder | undefined, selectedFile?: File; isLoggedIn: boolean }> {
+interface ILfSelectedFolder {
+  selectedNodeUrl: string; // url to open the selected node in Web Client
+  selectedFolderPath: string; // path of selected folder
+  selectedFolderName: string; // name of the selected folder
+}
+
+export default class App extends React.Component<
+any, 
+{ 
+  expandFolderBrowser: boolean;
+  lfSelectedFolder?: ILfSelectedFolder; 
+  selectedFile?: File; 
+  isLoggedIn: boolean; 
+  shouldShowOpen: boolean; 
+  shouldShowSelect: boolean; 
+  shouldDisableSelect: boolean; 
+  showNewFolderDialog: boolean;
+  popupErrorMessage: string;
+}> {
   REDIRECT_URI: string = 'REPLACE_WITH_YOUR_REDIRECT_URI'; // i.e http://localhost:3000, https://serverName/lf-sample/index.html
   CLIENT_ID: string = 'REPLACE_WITH_YOUR_CLIENT_ID';
   HOST_NAME: string = ''; // only add this if you are using a different region or environment (i.e. laserfiche.ca, eu.laserfiche.com)
-  REGIONAL_DOMAIN: string = 'laserfiche.com' // only update this if you are using a different region or environment
 
   loginComponent: React.RefObject<NgElement & WithProperties<LfLoginComponent>>;
-  folderBrowser: React.RefObject<NgElement & WithProperties<LfFileExplorerComponent>>;
+  repositoryBrowser: React.RefObject<NgElement & WithProperties<LfRepositoryBrowserComponent>>;
   repoClient?: IRepositoryApiClientExInternal;
   creationDate?: string;
-  lfRepoTreeService?: LfRepoTreeService;
-  selectedNodeUrl: string | undefined;
-  selectedFolderDisplayName: string | undefined;
+  lfRepoTreeService?: LfRepoTreeNodeService;
   fileName: string | undefined;
   fileExtension: string | undefined;
   fileInput: React.RefObject<HTMLInputElement> | undefined;
   fieldContainer: React.RefObject<NgElement & WithProperties<LfFieldContainerComponent>>;
   fieldsService?: LfFieldsService;
-  localizationService = new LfLocalizationService(resources);
+  localizationService: LfLocalizationService = new LfLocalizationService(resources);
+  entrySelected: LfRepoTreeNode | undefined;
+  toolBarElement: React.RefObject<NgElement & WithProperties<LfToolbarComponent>>;
 
   constructor(props: any) {
     super(props);
     this.loginComponent = React.createRef();
-    this.folderBrowser = React.createRef();
+    this.repositoryBrowser = React.createRef();
     this.fileInput = React.createRef();
     this.fieldContainer = React.createRef();
-    this.setState(() => { return { expandFolderBrowser: false, isLoggedIn: false, selectedFolder: undefined } });
+    this.toolBarElement = React.createRef();
+    this.setState({
+      expandFolderBrowser: false, 
+      isLoggedIn: false, 
+      lfSelectedFolder: undefined, 
+      shouldShowOpen: false, 
+      shouldShowSelect: false,
+      shouldDisableSelect: false,
+      showNewFolderDialog: false,
+      popupErrorMessage: ''
+    });
   }
 
   componentDidMount = async () => {
@@ -75,31 +111,34 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
     this.loginComponent?.current?.addEventListener('logoutCompleted', this.logoutCompleted);
     this.fileInput?.current?.addEventListener('change', this.selectFile);
     await this.getAndInitializeRepositoryClientAndServicesAsync();
-  }
+  };
 
   // login handlers and helpers
 
   loginCompleted = async () => {
     await this.getAndInitializeRepositoryClientAndServicesAsync();
-  }
+  };
 
   logoutCompleted = () => {
-    this.setState(() => { return { isLoggedIn: false } });
-  }
+    this.setState({ isLoggedIn: false });
+  };
 
   private async getAndInitializeRepositoryClientAndServicesAsync() {
     const accessToken = this.loginComponent?.current?.authorization_credentials?.accessToken;
     if (accessToken) {
-      this.setState(() => { return { isLoggedIn: true } });
+      this.setState({ isLoggedIn: true });
       await this.ensureRepoClientInitializedAsync();
 
+      if (!this.repoClient) {
+        throw new Error('repoClient is undefined.');
+      }
       // create the tree service to interact with the LF Api
-      this.lfRepoTreeService = new LfRepoTreeService(this.repoClient!);
+      this.lfRepoTreeService = new LfRepoTreeNodeService(this.repoClient);
       // by default all entries are viewable
-      this.lfRepoTreeService.viewableEntryTypes = [LfRepoTreeEntryType.Folder, LfRepoTreeEntryType.ShortcutFolder];
+      this.lfRepoTreeService.viewableEntryTypes = [EntryType.Folder, EntryType.Shortcut];
 
       // create the fields service to let the field component interact with Laserfiche
-      this.fieldsService = new LfFieldsService(this.repoClient!);
+      this.fieldsService = new LfFieldsService(this.repoClient);
       this.fieldContainer.current?.addEventListener('dialogOpened', this.onDialogOpened);
       this.fieldContainer.current?.addEventListener('dialogClosed', this.onDialogClosed);
       await this.fieldContainer.current?.initAsync(this.fieldsService);
@@ -114,12 +153,12 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
     const accessToken = this.loginComponent?.current?.authorization_credentials?.accessToken;
     if (accessToken) {
       this.addAuthorizationHeader(request, accessToken);
-      return { regionalDomain: this.REGIONAL_DOMAIN } // update this if you are using a different region
+      return { regionalDomain: this.HOST_NAME }; // update this if you are using a different region
     }
     else {
       throw new Error('No access token');
     }
-  }
+  };
 
   private afterFetchResponseAsync = async (url: string, response: ResponseInit, request: RequestInit) => {
     if (response.status === 401) {
@@ -135,7 +174,7 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
       }
     }
     return false;
-  }
+  };
 
   private getCurrentRepo = async () => {
     const repos = await this.repoClient!.repositoriesClient.getRepositoryList({});
@@ -143,7 +182,7 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
     if (repo.repoId && repo.repoName) {
       return { repoId: repo.repoId, repoName: repo.repoName };
     }
-    throw new Error('Current repoId undefined.')
+    throw new Error('Current repoId undefined.');
   };
 
   async ensureRepoClientInitializedAsync(): Promise<void> {
@@ -157,18 +196,18 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
       const clearCurrentRepo = () => {
         this.repoClient!._repoId = undefined;
         this.repoClient!._repoName = undefined;
-      }
+      };
       this.repoClient = {
         clearCurrentRepo,
         _repoId: undefined,
         _repoName: undefined,
         getCurrentRepoId: async () => {
           if (this.repoClient?._repoId) {
-            console.log('getting id from cache')
-            return this.repoClient._repoId
+            console.log('getting id from cache');
+            return this.repoClient._repoId;
           }
           else {
-            console.log('getting id from api')
+            console.log('getting id from api');
             const repo = (await this.getCurrentRepo()).repoId;
             this.repoClient!._repoId = repo;
             return repo;
@@ -185,7 +224,7 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
           }
         },
         ...partialRepoClient
-      }
+      };
     }
   }
 
@@ -198,11 +237,6 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
   }
 
   // folder-browser handlers
-
-  private getFolderPathTooltip(path: string): string {
-    const FOLDER_BROWSER_PLACEHOLDER = this.localizationService.getString('FOLDER_BROWSER_PLACEHOLDER');
-    return path ? PathUtils.createDisplayPath(path) : FOLDER_BROWSER_PLACEHOLDER;
-  }
 
   private getFolderNameText(entryId: number, path: string): string {
     if (path) {
@@ -225,63 +259,144 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
     }
   }
 
-  onOkClick = async (ev: Event) => {
-    const selectedNode = (ev as CustomEvent<TreeNode>).detail;
-    const breadcrumbs = this.folderBrowser.current?.breadcrumbs;
-    const entryId = Number.parseInt(selectedNode.id, 10);
-    const path = selectedNode.path;
-    const selectedFolder: LfFolder = {
-      entryId,
-      path,
-      displayName: this.getFolderNameText(entryId, path),
-      displayPath: this.getFolderPathTooltip(path)
-    };
-    if (breadcrumbs) {
-      selectedFolder.breadcrumbs = breadcrumbs;
+  onSelectFolder = async () => {
+    if (!this.repoClient) {
+      throw new Error('Repo Client is undefined.');
     }
-    const nodeId = selectedNode.id;
-    const repoId = (await this.repoClient?.getCurrentRepoId());
-    const waUrl = this.loginComponent.current?.account_endpoints?.webClientUrl;
-    this.selectedNodeUrl = getEntryWebAccessUrl(nodeId, repoId!, waUrl!, selectedNode.isContainer);
-    this.selectedFolderDisplayName = selectedFolder?.displayName;
-    this.setState(() => { return { expandFolderBrowser: false, selectedFolder: selectedFolder } });
-  }
-  folderCancelClick = () => {
-    this.setState(() => { return { expandFolderBrowser: false } });
-  }
+    if (!this.loginComponent.current?.account_endpoints) {
+      throw new Error('LfLoginComponent is not found.');
+    }
+    const selectedNode = this.repositoryBrowser.current?.currentFolder as LfRepoTreeNode;
+    let entryId = Number.parseInt(selectedNode.id, 10);
+    const selectedFolderPath = selectedNode.path;
+    if (selectedNode.entryType === EntryType.Shortcut) {
+      if (selectedNode.targetId)
+      entryId = selectedNode.targetId;
+    }
+    const repoId = (await this.repoClient.getCurrentRepoId());
+    const waUrl = this.loginComponent.current.account_endpoints.webClientUrl;
+    this.setState({
+      lfSelectedFolder: {
+        selectedNodeUrl: getEntryWebAccessUrl(entryId.toString(), repoId, waUrl, selectedNode.isContainer) ?? '',
+        selectedFolderName: this.getFolderNameText(entryId, selectedFolderPath),
+        selectedFolderPath: selectedFolderPath
+      },
+      shouldShowOpen: false,
+      expandFolderBrowser: false,
+      shouldShowSelect: false,
+    });
+  };
+
+  onClickCancelButton = () => {
+    this.setState({
+      expandFolderBrowser: false,
+      shouldShowOpen: false,
+      shouldShowSelect: false
+    });
+  };
+
+  onEntrySelected = (event: any) => {
+    const treeNodesSelected: LfRepoTreeNode[] = event.detail;
+    this.entrySelected = treeNodesSelected?.length > 0 ? treeNodesSelected[0] : undefined;
+    this.setShouldShowOpen();
+    this.setShouldShowSelect();
+  };
 
   onClickBrowse = async () => {
-    this.setState(() => { return { expandFolderBrowser: true } }, async () => {
-      await this.initializeTreeAsync()
+    this.setState({ expandFolderBrowser: true}, async () => {
+      await this.initializeTreeAsync();
+      this.initializeToolbar();
+      this.setShouldShowOpen();
+      this.setShouldShowSelect();
     });
-  }
+  };
 
   async initializeTreeAsync() {
-    this.folderBrowser.current?.addEventListener('okClick', this.onOkClick);
-    this.folderBrowser.current?.addEventListener('cancelClick', this.folderCancelClick);
-    await this.folderBrowser?.current?.initAsync({
-      treeService: this.lfRepoTreeService!
-    });
-  }
+    if (!this.repoClient) {
+      throw new Error('RepoId is undefined');
+    }
+    this.repositoryBrowser.current?.addEventListener('entrySelected', this.onEntrySelected );
+    let focusedNode: LfRepoTreeNode | undefined;
+    if (this.state?.lfSelectedFolder) {
+      const repoId = await this.repoClient.getCurrentRepoId();
+      const focusedNodeByPath = await this.repoClient.entriesClient.getEntryByPath({
+          repoId: repoId,
+          fullPath: this.state?.lfSelectedFolder.selectedFolderPath
+        });
+      const repoName = await this.repoClient.getCurrentRepoName();
+      const focusedNodeEntry = focusedNodeByPath?.entry;
+      if (focusedNodeEntry) {
+        focusedNode = this.lfRepoTreeService?.createLfRepoTreeNode(focusedNodeEntry, repoName);
+      }
+    }
+      await this.repositoryBrowser?.current?.initAsync(this.lfRepoTreeService!, focusedNode);
+    }
+
+  isNodeSelectable = (node: LfRepoTreeNode) => {
+    if (node?.entryType == EntryType.Folder) {
+      return true;
+    }
+    else if (node?.entryType == EntryType.Shortcut && node?.targetType == EntryType.Folder) {
+      return true;
+    }
+    else {
+      return false;
+    }
+  };
+
+  onOpenNode = async () => {
+    await this.repositoryBrowser?.current?.openSelectedNodesAsync();
+    this.setShouldShowOpen();
+    this.setShouldShowSelect();
+  };
 
   // metadata handlers
-
   onDialogOpened = () => {
     // "hack" for add remove dialog on smaller screen
     window.scrollTo({ top: 0, left: 0 });
     document.body.style.overflow = 'hidden';
-  }
+  };
 
   onDialogClosed = () => {
     // "hack" for add remove dialog on smaller screen
     document.body.scrollTo({ top: 0, left: 0 });
     document.body.style.overflow = 'auto';
+  };
+
+  private initializeToolbar() {
+    if (this.toolBarElement.current) {
+      this.toolBarElement.current.dropdown_options = [
+        {
+          name: this.REFRESH,
+          disabled: false,
+          tag: {
+            handler: async () => {
+              await this.repositoryBrowser?.current?.refreshAsync();
+              console.log('refresh');
+            },
+          }
+        },
+        {
+          name: this.NEW_FOLDER,
+          disabled: false,
+          tag: {
+            handler: () => { this.setState({showNewFolderDialog: true}); }
+          }
+        },
+      ];      
+      this.toolBarElement.current.addEventListener('optionSelected', this.handleToolBarOption);
+    }
   }
 
+  handleToolBarOption = async (event: any) => {
+    const toolbarSelected: ToolbarOption = event.detail;
+    await toolbarSelected.tag.handler();
+  };
+  
   private async createMetadataRequestAsync(): Promise<PostEntryWithEdocMetadataRequest> {
     const fieldValues = this.fieldContainer?.current?.getFieldValues() ?? {};
     const templateName = this.fieldContainer?.current?.getTemplateValue()?.name ?? '';
-    let formattedFieldValues: {
+    const formattedFieldValues: {
       [key: string]: FieldToUpdate;
     } | undefined = {};
 
@@ -317,61 +432,89 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
 
   onInputAreaClick = () => {
     this.fileInput?.current?.click();
-  }
+  };
 
   selectFile = () => {
     const files = this.fileInput?.current?.files;
     const fileSelected = files?.item(0) ?? undefined;
     this.fileName = PathUtils.removeFileExtension(fileSelected?.name ?? '');
     this.fileExtension = PathUtils.getFileExtension(fileSelected?.name ?? '');
-    this.setState(() => { return { selectedFile: fileSelected } });
-  }
+    this.setState({selectedFile: fileSelected});
+  };
 
   clearFileSelected = () => {
     // TODO this causes a loud warning because it changes the component to controlled
     this.fileInput!.current!.files = null;
     this.fileName = undefined;
     this.fileExtension = undefined;
-    this.setState(() => { return { selectedFile: undefined } })
-  }
+    this.setState({selectedFile: undefined});
+  };
 
   updateFileName = (ev: React.ChangeEvent<HTMLInputElement>) => {
     this.fileName = ev.target.value;
-  }
+  };
 
   // save handlers/helpers
 
   onClickSave = async () => {
+    if (!this.repoClient) {
+      throw new Error('repoClient is undefined');
+    }
+    if (!this.state?.lfSelectedFolder) {
+      throw new Error('no entry is selected');
+    }
     const valid = this.fieldContainer?.current?.forceValidation();
     if (valid) {
       const fileNameWithExtension = this.fileName + '.' + this.fileExtension;
       const edocBlob: FileParameter = { data: (this.state?.selectedFile as Blob), fileName: fileNameWithExtension };
-      const parentEntryId = this.state?.selectedFolder!.entryId!;
-
+ 
       const metadataRequest = await this.createMetadataRequestAsync();
       const entryRequest: PostEntryWithEdocMetadataRequest = new PostEntryWithEdocMetadataRequest({
         metadata: metadataRequest.metadata,
         template: metadataRequest.template
       });
-      await this.repoClient?.entriesClient.importDocument({
-        repoId: (await this.repoClient.getCurrentRepoId()),
-        parentEntryId,
-        fileName: this.fileName!,
-        autoRename: true,
-        electronicDocument: edocBlob,
-        request: entryRequest
-      });
-      window.alert('Successfully saved document to Laserfiche')
+      try {
+        const repoId = await this.repoClient.getCurrentRepoId();
+        const currentSelectedByPathResponse = await this.repoClient.entriesClient.getEntryByPath({
+          repoId,
+          fullPath: this.state.lfSelectedFolder.selectedFolderPath
+        });
+        const currentSelectedEntry = currentSelectedByPathResponse.entry;
+        if (!currentSelectedEntry?.id) {
+          throw new Error('getEntryByPath returns entry with undefined id');
+        }
+        let parentEntryId = currentSelectedEntry.id;
+        if (currentSelectedEntry.entryType == EntryType.Shortcut) {
+          const shortcut = currentSelectedEntry as Shortcut;
+          if (!shortcut.targetId) {
+            throw new Error('shortcut has undefined targetId');
+          }
+          parentEntryId = shortcut.targetId;
+        }
+        await this.repoClient.entriesClient.importDocument({
+          repoId: (await this.repoClient.getCurrentRepoId()),
+          parentEntryId,
+          fileName: this.fileName?? '',
+          autoRename: true,
+          electronicDocument: edocBlob,
+          request: entryRequest
+        });
+        window.alert('Successfully saved document to Laserfiche');
+      }
+      catch (err: any) {
+        console.error(err);
+        window.alert(`${this.localizationService.getString('ERROR_SAVING')}: ${err.message}`);
+      }
     }
     else {
       console.warn('metadata invalid');
       window.alert('One or more fields is invalid. Please fix and try again');
     }
-  }
+  };
 
   get enableSave(): boolean {
     const fileSelected: boolean = !!this.state?.selectedFile;
-    const folderSelected: boolean = !!this.state?.selectedFolder;
+    const folderSelected: boolean = !!this.state?.lfSelectedFolder;
 
     return fileSelected && folderSelected;
   }
@@ -380,6 +523,68 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
     await this.loginComponent.current?.refreshTokenAsync(true);
   }
 
+  setShouldShowSelect(): void {
+    this.setState({
+      shouldShowSelect: !this.entrySelected && !!this.repositoryBrowser?.current?.currentFolder
+    });
+  }
+
+  setShouldShowOpen(): void {
+    this.setState({
+      shouldShowOpen: !!this.entrySelected
+    });
+  }
+
+  showDialog = () => {
+    this.setState({showNewFolderDialog: true});
+  };
+
+  hideDialog = async (folderName?: string) => {
+
+    if (folderName) {
+      if (!this.repositoryBrowser?.current?.currentFolder) {
+        throw new Error('repositoryBrowser has no currently opened folder.');
+      }
+      try {
+        await this.addNewFolderAsync(this.repositoryBrowser?.current?.currentFolder, folderName);
+        await this.repositoryBrowser?.current.refreshAsync();
+        this.setState({showNewFolderDialog: false});
+      }
+      catch (e: any) {
+        if (e.title) {
+          this.setState({popupErrorMessage: e.title});
+        }
+        else {
+          this.setState({popupErrorMessage: this.UNKNOWN_ERROR});
+        }
+      }
+
+    }
+    else {
+      this.setState({showNewFolderDialog: false});
+    }
+  };
+
+  async addNewFolderAsync(parentNode: LfTreeNode, folderName: string): Promise<void> {
+    if (!this.repoClient) {
+      throw new Error('repoClient is undefined');
+    }
+    const requestParameters: { entryId: number; postEntryChildrenRequest: PostEntryChildrenRequest } = {
+        entryId: parseInt(parentNode.id, 10),
+        postEntryChildrenRequest: new PostEntryChildrenRequest({
+            name: folderName,
+            entryType: PostEntryChildrenEntryType.Folder
+        })
+    };
+    const repoId: string = await this.repoClient.getCurrentRepoId();
+    await this.repoClient?.entriesClient.createOrCopyEntry(
+        {
+            repoId,
+            entryId: requestParameters.entryId,
+            request: requestParameters.postEntryChildrenRequest
+        }
+    );
+}
   // react render method
   render() {
     return (
@@ -395,7 +600,7 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
         </div>
 
         <div hidden={!this.state?.isLoggedIn}>
-
+          {this.state?.showNewFolderDialog && <Modal onClose={this.hideDialog.bind(this)} errorMessage={this.state?.popupErrorMessage}/>}
           <button className="lf-refresh-button" onClick={() => this.onClickRefreshAsync()}>Refresh</button>
           <div className="folder-browse-select lf-component-container">
             <span>
@@ -418,15 +623,34 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
 
           <div className="lf-component-container">
             <div className="folder-browse-select">
-              {this.SELECTED_FOLDER}: {this.state?.selectedFolder?.displayName ?? this.FOLDER_BROWSER_PLACEHOLDER}
+              {this.SELECTED_FOLDER}: {this.state?.lfSelectedFolder?.selectedFolderName ?? this.FOLDER_BROWSER_PLACEHOLDER}
               <button onClick={this.onClickBrowse} hidden={this.state?.expandFolderBrowser} className="lf-button primary-button" >{this.BROWSE}</button>
             </div>
-            <a hidden={!this.selectedNodeUrl} className="open-in-lf-link" href={this.selectedNodeUrl} target="_blank"
+            <a hidden={!this.state?.lfSelectedFolder} className="open-in-lf-link" href={this.state?.lfSelectedFolder?.selectedNodeUrl} target="_blank"
               rel="noopener noreferrer">{this.OPEN_IN_LASERFICHE}</a>
             <div className="lf-folder-browser-sample-container">
-              {this.state?.expandFolderBrowser && <lf-folder-browser ref={this.folderBrowser}
-                ok_button_text="SELECT" cancel_button_text="CANCEL">
-              </lf-folder-browser>}
+              {this.state?.expandFolderBrowser &&
+              <div className="repository-browser">
+                <div className='repo-browser-with-toolbar'>
+                <lf-repository-browser ref={this.repositoryBrowser}
+                  multiple="false"
+                  style={{height: '420px'}}
+                  isSelectable={this.isNodeSelectable}>
+                </lf-repository-browser>
+                <lf-toolbar ref={this.toolBarElement}></lf-toolbar>
+                </div>
+                <div className="repository-browser-button-containers">
+                  <span>
+                    <button className="lf-button primary-button" onClick={this.onOpenNode} hidden={!this.state?.shouldShowOpen}>{this.OPEN}
+                    </button>
+                    <button className="lf-button primary-button" onClick={this.onSelectFolder} hidden={!this.state?.shouldShowSelect}>
+                      {this.SELECT}
+                    </button>
+                    <button className="sec-button lf-button margin-left-button" hidden={!this.state?.expandFolderBrowser}
+                    onClick={this.onClickCancelButton}>{this.CANCEL}</button>
+                  </span>
+                </div>
+              </div>}
             </div>
           </div>
 
@@ -451,7 +675,10 @@ export default class App extends React.Component<{}, { expandFolderBrowser: bool
   SELECTED_FOLDER = this.localizationService.getString('SELECTED_FOLDER');
   FILE_NAME = this.localizationService.getString('FILE_NAME');
   OPEN_IN_LASERFICHE = this.localizationService.getString('OPEN_IN_LASERFICHE');
+  OPEN = this.localizationService.getString('OPEN');
+  REFRESH = this.localizationService.getString('REFRESH');
+  NEW_FOLDER = this.localizationService.getString('NEW_FOLDER');
   SELECT = this.localizationService.getString('SELECT');
   CANCEL = this.localizationService.getString('CANCEL');
-
+  UNKNOWN_ERROR = this.localizationService.getString('UNKNOWN_ERROR');
 }
