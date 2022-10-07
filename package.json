@@ -4,9 +4,9 @@
   "private": true,
   "dependencies": {
     "@angular/elements": "^13.2.1",
-    "@laserfiche/lf-js-utils": "^4.0.3",
+    "@laserfiche/lf-js-utils": "^4.0.4",
     "@laserfiche/lf-repository-api-client": "^1.0.6",
-    "@laserfiche/lf-ui-components-services": "^13.0.1",
+    "@laserfiche/lf-ui-components-services": "^13.0.1--preview-3186126222",
     "@testing-library/jest-dom": "^5.16.2",
     "@testing-library/react": "^12.1.2",
     "@testing-library/user-event": "^13.5.0",

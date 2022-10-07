@@ -135,7 +135,7 @@ any,
       // create the tree service to interact with the LF Api
       this.lfRepoTreeService = new LfRepoTreeNodeService(this.repoClient);
       // by default all entries are viewable
-      this.lfRepoTreeService.viewableEntryTypes = [EntryType.Folder, EntryType.Shortcut];
+      this.lfRepoTreeService.viewableEntryTypes = [EntryType.Folder, EntryType.Shortcut, EntryType.RecordSeries];
 
       // create the fields service to let the field component interact with Laserfiche
       this.fieldsService = new LfFieldsService(this.repoClient);
@@ -298,6 +298,7 @@ any,
   onEntrySelected = (event: any) => {
     const treeNodesSelected: LfRepoTreeNode[] = event.detail;
     this.entrySelected = treeNodesSelected?.length > 0 ? treeNodesSelected[0] : undefined;
+    this.initializeToolbar();
     this.setShouldShowOpen();
     this.setShouldShowSelect();
   };
@@ -315,7 +316,6 @@ any,
     if (!this.repoClient) {
       throw new Error('RepoId is undefined');
     }
-    this.repositoryBrowser.current?.addEventListener('entrySelected', this.onEntrySelected );
     let focusedNode: LfRepoTreeNode | undefined;
     if (this.state?.lfSelectedFolder) {
       const repoId = await this.repoClient.getCurrentRepoId();
@@ -330,9 +330,14 @@ any,
       }
     }
       await this.repositoryBrowser?.current?.initAsync(this.lfRepoTreeService!, focusedNode);
+      if (this.repositoryBrowser?.current) {
+        this.repositoryBrowser.current.isSelectable = this.isNodeSelectable;
+        this.repositoryBrowser.current.addEventListener('entrySelected', this.onEntrySelected );
+      }
     }
 
-  isNodeSelectable = (node: LfRepoTreeNode) => {
+  isNodeSelectable = async (treenode: LfTreeNode) => {
+    const node = treenode as LfRepoTreeNode;
     if (node?.entryType == EntryType.Folder) {
       return true;
     }
@@ -365,25 +370,44 @@ any,
 
   private initializeToolbar() {
     if (this.toolBarElement.current) {
-      this.toolBarElement.current.dropdown_options = [
-        {
-          name: this.REFRESH,
-          disabled: false,
-          tag: {
-            handler: async () => {
-              await this.repositoryBrowser?.current?.refreshAsync();
-              console.log('refresh');
-            },
+      const selecteFolder = this.repositoryBrowser.current?.currentFolder as LfRepoTreeNode;
+      if (selecteFolder.entryType === EntryType.RecordSeries) {
+        this.toolBarElement.current.dropdown_options = [
+          {
+            name: this.REFRESH,
+            disabled: false,
+            tag: {
+              handler: async () => {
+                await this.repositoryBrowser?.current?.refreshAsync();
+                console.log('refresh');
+              },
+            }
           }
-        },
-        {
-          name: this.NEW_FOLDER,
-          disabled: false,
-          tag: {
-            handler: () => { this.setState({showNewFolderDialog: true}); }
-          }
-        },
-      ];      
+        ];   
+      }
+      else {
+        this.toolBarElement.current.dropdown_options = [
+          {
+            name: this.REFRESH,
+            disabled: false,
+            tag: {
+              handler: async () => {
+                await this.repositoryBrowser?.current?.refreshAsync();
+                console.log('refresh');
+              },
+            }
+          },
+          {
+            name: this.NEW_FOLDER,
+            disabled: false,
+            tag: {
+              handler: () => { 
+                this.setState({showNewFolderDialog: true}); 
+              }
+            }
+          },
+        ];   
+      }   
       this.toolBarElement.current.addEventListener('optionSelected', this.handleToolBarOption);
     }
   }
@@ -523,9 +547,15 @@ any,
     await this.loginComponent.current?.refreshTokenAsync(true);
   }
 
-  setShouldShowSelect(): void {
+  async setShouldShowSelect() {
+    if (this.repositoryBrowser?.current?.currentFolder) {
+      const isSelectable = await this.isNodeSelectable(this.repositoryBrowser?.current?.currentFolder);
+      this.setState({
+        shouldShowSelect: !this.entrySelected && isSelectable
+      });
+    }
     this.setState({
-      shouldShowSelect: !this.entrySelected && !!this.repositoryBrowser?.current?.currentFolder
+      shouldShowSelect: false
     });
   }
 
@@ -634,8 +664,7 @@ any,
                 <div className='repo-browser-with-toolbar'>
                 <lf-repository-browser ref={this.repositoryBrowser}
                   multiple="false"
-                  style={{height: '420px'}}
-                  isSelectable={this.isNodeSelectable}>
+                  style={{height: '420px'}}>
                 </lf-repository-browser>
                 <lf-toolbar ref={this.toolBarElement}></lf-toolbar>
                 </div>
