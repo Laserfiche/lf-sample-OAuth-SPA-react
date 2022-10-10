@@ -298,7 +298,7 @@ any,
   onEntrySelected = (event: any) => {
     const treeNodesSelected: LfRepoTreeNode[] = event.detail;
     this.entrySelected = treeNodesSelected?.length > 0 ? treeNodesSelected[0] : undefined;
-    this.initializeToolbar();
+    this.updateToolbarOptions();
     this.setShouldShowOpen();
     this.setShouldShowSelect();
   };
@@ -368,24 +368,17 @@ any,
     document.body.style.overflow = 'auto';
   };
 
+  private updateToolbarOptions() {
+    if (this.toolBarElement.current) {
+      const selectedFolder = this.repositoryBrowser.current?.currentFolder as LfRepoTreeNode;
+      const newFolderOption = this.toolBarElement.current.dropdown_options[1];
+      if (selectedFolder.entryType === EntryType.RecordSeries) {
+        newFolderOption.disabled = true;
+      }
+    }
+  }
   private initializeToolbar() {
     if (this.toolBarElement.current) {
-      const selecteFolder = this.repositoryBrowser.current?.currentFolder as LfRepoTreeNode;
-      if (selecteFolder.entryType === EntryType.RecordSeries) {
-        this.toolBarElement.current.dropdown_options = [
-          {
-            name: this.REFRESH,
-            disabled: false,
-            tag: {
-              handler: async () => {
-                await this.repositoryBrowser?.current?.refreshAsync();
-                console.log('refresh');
-              },
-            }
-          }
-        ];   
-      }
-      else {
         this.toolBarElement.current.dropdown_options = [
           {
             name: this.REFRESH,
@@ -407,7 +400,7 @@ any,
             }
           },
         ];   
-      }   
+      this.updateToolbarOptions();  
       this.toolBarElement.current.addEventListener('optionSelected', this.handleToolBarOption);
     }
   }
@@ -553,10 +546,12 @@ any,
       this.setState({
         shouldShowSelect: !this.entrySelected && isSelectable
       });
+      return;
     }
     this.setState({
       shouldShowSelect: false
     });
+    return;
   }
 
   setShouldShowOpen(): void {
