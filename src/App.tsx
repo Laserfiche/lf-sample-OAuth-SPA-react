@@ -374,6 +374,8 @@ any,
       const newFolderOption = this.toolBarElement.current.dropdown_options[1];
       if (selectedFolder.entryType === EntryType.RecordSeries) {
         newFolderOption.disabled = true;
+      } else {
+        newFolderOption.disabled = false;
       }
     }
   }
