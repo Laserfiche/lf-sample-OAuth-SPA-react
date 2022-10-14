@@ -372,13 +372,19 @@ any,
     if (this.toolBarElement.current) {
       const selectedFolder = this.repositoryBrowser.current?.currentFolder as LfRepoTreeNode;
       const newFolderOption = this.toolBarElement.current.dropdown_options[1];
-      if (selectedFolder.entryType === EntryType.RecordSeries) {
+      if (selectedFolder) {
+        if (selectedFolder.entryType === EntryType.RecordSeries) {
         newFolderOption.disabled = true;
-      } else {
-        newFolderOption.disabled = false;
+        } else {
+          newFolderOption.disabled = false;
+        }
+      }
+      else {
+        newFolderOption.disabled = true;
       }
     }
   }
+
   private initializeToolbar() {
     if (this.toolBarElement.current) {
         this.toolBarElement.current.dropdown_options = [
@@ -585,7 +591,6 @@ any,
           this.setState({popupErrorMessage: this.UNKNOWN_ERROR});
         }
       }
-
     }
     else {
       this.setState({showNewFolderDialog: false});

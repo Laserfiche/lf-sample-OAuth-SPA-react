@@ -55,13 +55,7 @@ export default class Modal extends React.Component<{onClose: (folderName?: strin
     };
 
     closeDialog = (folderName?: string) => {
-      this.setState({
-        open: false
-      });
-      setTimeout(() => {
         this.props.onClose(folderName);
-      }, 200);
-      
     };
 
     render() {
