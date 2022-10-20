@@ -57,21 +57,21 @@ interface ILfSelectedFolder {
 }
 
 export default class App extends React.Component<
-any, 
-{ 
-  expandFolderBrowser: boolean;
-  lfSelectedFolder?: ILfSelectedFolder; 
-  selectedFile?: File; 
-  isLoggedIn: boolean; 
-  shouldShowOpen: boolean; 
-  shouldShowSelect: boolean; 
-  shouldDisableSelect: boolean; 
-  showNewFolderDialog: boolean;
-  popupErrorMessage: string;
-}> {
-  REDIRECT_URI: string = 'REPLACE_WITH_YOUR_REDIRECT_URI'; // i.e http://localhost:3000, https://serverName/lf-sample/index.html
-  CLIENT_ID: string = 'REPLACE_WITH_YOUR_CLIENT_ID';
-  HOST_NAME: string = ''; // only add this if you are using a different region or environment (i.e. laserfiche.ca, eu.laserfiche.com)
+  any,
+  {
+    expandFolderBrowser: boolean;
+    lfSelectedFolder?: ILfSelectedFolder;
+    selectedFile?: File;
+    isLoggedIn: boolean;
+    shouldShowOpen: boolean;
+    shouldShowSelect: boolean;
+    shouldDisableSelect: boolean;
+    showNewFolderDialog: boolean;
+    popupErrorMessage: string;
+  }> {
+    REDIRECT_URI: string = 'REPLACE_WITH_YOUR_REDIRECT_URI'; // i.e http://localhost:3000, https://serverName/lf-sample/index.html
+    CLIENT_ID: string = 'REPLACE_WITH_YOUR_CLIENT_ID';
+    HOST_NAME: string = ''; // only add this if you are using a different region or environment (i.e. laserfiche.ca, eu.laserfiche.com)
 
   loginComponent: React.RefObject<NgElement & WithProperties<LfLoginComponent>>;
   repositoryBrowser: React.RefObject<NgElement & WithProperties<LfRepositoryBrowserComponent>>;
@@ -95,10 +95,10 @@ any,
     this.fieldContainer = React.createRef();
     this.toolBarElement = React.createRef();
     this.setState({
-      expandFolderBrowser: false, 
-      isLoggedIn: false, 
-      lfSelectedFolder: undefined, 
-      shouldShowOpen: false, 
+      expandFolderBrowser: false,
+      isLoggedIn: false,
+      lfSelectedFolder: undefined,
+      shouldShowOpen: false,
       shouldShowSelect: false,
       shouldDisableSelect: false,
       showNewFolderDialog: false,
@@ -271,7 +271,7 @@ any,
     const selectedFolderPath = selectedNode.path;
     if (selectedNode.entryType === EntryType.Shortcut) {
       if (selectedNode.targetId)
-      entryId = selectedNode.targetId;
+        entryId = selectedNode.targetId;
     }
     const repoId = (await this.repoClient.getCurrentRepoId());
     const waUrl = this.loginComponent.current.account_endpoints.webClientUrl;
@@ -304,7 +304,7 @@ any,
   };
 
   onClickBrowse = async () => {
-    this.setState({ expandFolderBrowser: true}, async () => {
+    this.setState({ expandFolderBrowser: true }, async () => {
       await this.initializeTreeAsync();
       this.initializeToolbar();
       this.setShouldShowOpen();
@@ -320,21 +320,21 @@ any,
     if (this.state?.lfSelectedFolder) {
       const repoId = await this.repoClient.getCurrentRepoId();
       const focusedNodeByPath = await this.repoClient.entriesClient.getEntryByPath({
-          repoId: repoId,
-          fullPath: this.state?.lfSelectedFolder.selectedFolderPath
-        });
+        repoId: repoId,
+        fullPath: this.state?.lfSelectedFolder.selectedFolderPath
+      });
       const repoName = await this.repoClient.getCurrentRepoName();
       const focusedNodeEntry = focusedNodeByPath?.entry;
       if (focusedNodeEntry) {
         focusedNode = this.lfRepoTreeService?.createLfRepoTreeNode(focusedNodeEntry, repoName);
       }
     }
-      await this.repositoryBrowser?.current?.initAsync(this.lfRepoTreeService!, focusedNode);
-      if (this.repositoryBrowser?.current) {
-        this.repositoryBrowser.current.isSelectable = this.isNodeSelectable;
-        this.repositoryBrowser.current.addEventListener('entrySelected', this.onEntrySelected );
-      }
+    await this.repositoryBrowser?.current?.initAsync(this.lfRepoTreeService!, focusedNode);
+    if (this.repositoryBrowser?.current) {
+      this.repositoryBrowser.current.isSelectable = this.isNodeSelectable;
+      this.repositoryBrowser.current.addEventListener('entrySelected', this.onEntrySelected);
     }
+  }
 
   isNodeSelectable = async (treenode: LfTreeNode) => {
     const node = treenode as LfRepoTreeNode;
@@ -372,37 +372,43 @@ any,
     if (this.toolBarElement.current) {
       const selectedFolder = this.repositoryBrowser.current?.currentFolder as LfRepoTreeNode;
       const newFolderOption = this.toolBarElement.current.dropdown_options[1];
-      if (selectedFolder.entryType === EntryType.RecordSeries) {
+      if (selectedFolder) {
+        if (selectedFolder.entryType === EntryType.RecordSeries) {
+          newFolderOption.disabled = true;
+        } else {
+          newFolderOption.disabled = false;
+        }
+      }
+      else {
         newFolderOption.disabled = true;
-      } else {
-        newFolderOption.disabled = false;
       }
     }
   }
+
   private initializeToolbar() {
     if (this.toolBarElement.current) {
-        this.toolBarElement.current.dropdown_options = [
-          {
-            name: this.REFRESH,
-            disabled: false,
-            tag: {
-              handler: async () => {
-                await this.repositoryBrowser?.current?.refreshAsync();
-                console.log('refresh');
-              },
+      this.toolBarElement.current.dropdown_options = [
+        {
+          name: this.REFRESH,
+          disabled: false,
+          tag: {
+            handler: async () => {
+              await this.repositoryBrowser?.current?.refreshAsync();
+              console.log('refresh');
+            },
+          }
+        },
+        {
+          name: this.NEW_FOLDER,
+          disabled: false,
+          tag: {
+            handler: () => {
+              this.setState({ showNewFolderDialog: true });
             }
-          },
-          {
-            name: this.NEW_FOLDER,
-            disabled: false,
-            tag: {
-              handler: () => { 
-                this.setState({showNewFolderDialog: true}); 
-              }
-            }
-          },
-        ];   
-      this.updateToolbarOptions();  
+          }
+        },
+      ];
+      this.updateToolbarOptions();
       this.toolBarElement.current.addEventListener('optionSelected', this.handleToolBarOption);
     }
   }
@@ -411,7 +417,7 @@ any,
     const toolbarSelected: ToolbarOption = event.detail;
     await toolbarSelected.tag.handler();
   };
-  
+
   private async createMetadataRequestAsync(): Promise<PostEntryWithEdocMetadataRequest> {
     const fieldValues = this.fieldContainer?.current?.getFieldValues() ?? {};
     const templateName = this.fieldContainer?.current?.getTemplateValue()?.name ?? '';
@@ -458,7 +464,7 @@ any,
     const fileSelected = files?.item(0) ?? undefined;
     this.fileName = PathUtils.removeFileExtension(fileSelected?.name ?? '');
     this.fileExtension = PathUtils.getFileExtension(fileSelected?.name ?? '');
-    this.setState({selectedFile: fileSelected});
+    this.setState({ selectedFile: fileSelected });
   };
 
   clearFileSelected = () => {
@@ -466,7 +472,7 @@ any,
     this.fileInput!.current!.files = null;
     this.fileName = undefined;
     this.fileExtension = undefined;
-    this.setState({selectedFile: undefined});
+    this.setState({ selectedFile: undefined });
   };
 
   updateFileName = (ev: React.ChangeEvent<HTMLInputElement>) => {
@@ -486,7 +492,7 @@ any,
     if (valid) {
       const fileNameWithExtension = this.fileName + '.' + this.fileExtension;
       const edocBlob: FileParameter = { data: (this.state?.selectedFile as Blob), fileName: fileNameWithExtension };
- 
+
       const metadataRequest = await this.createMetadataRequestAsync();
       const entryRequest: PostEntryWithEdocMetadataRequest = new PostEntryWithEdocMetadataRequest({
         metadata: metadataRequest.metadata,
@@ -513,7 +519,7 @@ any,
         await this.repoClient.entriesClient.importDocument({
           repoId: (await this.repoClient.getCurrentRepoId()),
           parentEntryId,
-          fileName: this.fileName?? '',
+          fileName: this.fileName ?? '',
           autoRename: true,
           electronicDocument: edocBlob,
           request: entryRequest
@@ -563,7 +569,7 @@ any,
   }
 
   showDialog = () => {
-    this.setState({showNewFolderDialog: true});
+    this.setState({ showNewFolderDialog: true });
   };
 
   hideDialog = async (folderName?: string) => {
@@ -575,20 +581,19 @@ any,
       try {
         await this.addNewFolderAsync(this.repositoryBrowser?.current?.currentFolder, folderName);
         await this.repositoryBrowser?.current.refreshAsync();
-        this.setState({showNewFolderDialog: false});
+        this.setState({ showNewFolderDialog: false });
       }
       catch (e: any) {
         if (e.title) {
-          this.setState({popupErrorMessage: e.title});
+          this.setState({ popupErrorMessage: e.title });
         }
         else {
-          this.setState({popupErrorMessage: this.UNKNOWN_ERROR});
+          this.setState({ popupErrorMessage: this.UNKNOWN_ERROR });
         }
       }
-
     }
     else {
-      this.setState({showNewFolderDialog: false});
+      this.setState({ showNewFolderDialog: false });
     }
   };
 
@@ -597,21 +602,21 @@ any,
       throw new Error('repoClient is undefined');
     }
     const requestParameters: { entryId: number; postEntryChildrenRequest: PostEntryChildrenRequest } = {
-        entryId: parseInt(parentNode.id, 10),
-        postEntryChildrenRequest: new PostEntryChildrenRequest({
-            name: folderName,
-            entryType: PostEntryChildrenEntryType.Folder
-        })
+      entryId: parseInt(parentNode.id, 10),
+      postEntryChildrenRequest: new PostEntryChildrenRequest({
+        name: folderName,
+        entryType: PostEntryChildrenEntryType.Folder
+      })
     };
     const repoId: string = await this.repoClient.getCurrentRepoId();
     await this.repoClient?.entriesClient.createOrCopyEntry(
-        {
-            repoId,
-            entryId: requestParameters.entryId,
-            request: requestParameters.postEntryChildrenRequest
-        }
+      {
+        repoId,
+        entryId: requestParameters.entryId,
+        request: requestParameters.postEntryChildrenRequest
+      }
     );
-}
+  }
   // react render method
   render() {
     return (
@@ -627,7 +632,7 @@ any,
         </div>
 
         <div hidden={!this.state?.isLoggedIn}>
-          {this.state?.showNewFolderDialog && <Modal onClose={this.hideDialog.bind(this)} errorMessage={this.state?.popupErrorMessage}/>}
+          {this.state?.showNewFolderDialog && <Modal onClose={this.hideDialog.bind(this)} errorMessage={this.state?.popupErrorMessage} />}
           <button className="lf-refresh-button" onClick={() => this.onClickRefreshAsync()}>Refresh</button>
           <div className="folder-browse-select lf-component-container">
             <span>
@@ -657,26 +662,26 @@ any,
               rel="noopener noreferrer">{this.OPEN_IN_LASERFICHE}</a>
             <div className="lf-folder-browser-sample-container">
               {this.state?.expandFolderBrowser &&
-              <div className="repository-browser">
-                <div className='repo-browser-with-toolbar'>
-                <lf-repository-browser ref={this.repositoryBrowser}
-                  multiple="false"
-                  style={{height: '420px'}}>
-                </lf-repository-browser>
-                <lf-toolbar ref={this.toolBarElement}></lf-toolbar>
-                </div>
-                <div className="repository-browser-button-containers">
-                  <span>
-                    <button className="lf-button primary-button" onClick={this.onOpenNode} hidden={!this.state?.shouldShowOpen}>{this.OPEN}
-                    </button>
-                    <button className="lf-button primary-button" onClick={this.onSelectFolder} hidden={!this.state?.shouldShowSelect}>
-                      {this.SELECT}
-                    </button>
-                    <button className="sec-button lf-button margin-left-button" hidden={!this.state?.expandFolderBrowser}
-                    onClick={this.onClickCancelButton}>{this.CANCEL}</button>
-                  </span>
-                </div>
-              </div>}
+                <div className="repository-browser">
+                  <div className='repo-browser-with-toolbar'>
+                    <lf-repository-browser ref={this.repositoryBrowser}
+                      multiple="false"
+                      style={{ height: '420px' }}>
+                    </lf-repository-browser>
+                    <lf-toolbar ref={this.toolBarElement}></lf-toolbar>
+                  </div>
+                  <div className="repository-browser-button-containers">
+                    <span>
+                      <button className="lf-button primary-button" onClick={this.onOpenNode} hidden={!this.state?.shouldShowOpen}>{this.OPEN}
+                      </button>
+                      <button className="lf-button primary-button" onClick={this.onSelectFolder} hidden={!this.state?.shouldShowSelect}>
+                        {this.SELECT}
+                      </button>
+                      <button className="sec-button lf-button margin-left-button" hidden={!this.state?.expandFolderBrowser}
+                        onClick={this.onClickCancelButton}>{this.CANCEL}</button>
+                    </span>
+                  </div>
+                </div>}
             </div>
           </div>
 
