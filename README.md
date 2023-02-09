@@ -28,7 +28,7 @@ We welcome contributions and feedback. Please follow our [contributing guideline
 ## First Time Setup
 
 1. Create a new Single Page App in [devconsole](https://app.laserfiche.com/devconsole/apps) and add the authentication redirect URI (e.g.: <https://myapp.example.com/lf-sample-app/>, <http://localhost:3000>) which is also the root page of this app.
-   - Select required scope(s) needed to read and write to the repository using SCOPE ("repository.Read" and "repository.Write" ). Scopes are case-sensitive and space-delimited. 
+   - Select required scope(s) needed to read and write to the repository in the 'Authentication' tab  ("repository.Read" and "repository.Write" ). Scopes are case-sensitive and space-delimited. 
 2. Open folder (containing package.json) with Visual Studio Code
 3. In `src/App.tsx` update the REDIRECT_URI and CLIENT_ID with the app client_id and redirect_uri as registered in step 1. 
 4. In VS Code, open a New Terminal window.
