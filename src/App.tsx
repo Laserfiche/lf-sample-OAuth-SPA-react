@@ -154,7 +154,7 @@ export default class App extends React.Component<
     const accessToken = this.loginComponent?.current?.authorization_credentials?.accessToken;
     if (accessToken) {
       this.addAuthorizationHeader(request, accessToken);
-      return { regionalDomain: this.HOST_NAME }; // update this if you are using a different region
+      return { regionalDomain: this.loginComponent.current?.account_endpoints?.regionalDomain }; // update this if you are using a different region
     }
     else {
       throw new Error('No access token');
@@ -628,7 +628,7 @@ export default class App extends React.Component<
         <div className="lf-component-container lf-right-button">
           <lf-login redirect_uri={this.REDIRECT_URI}
             authorize_url_host_name={this.HOST_NAME} redirect_behavior="Replace" client_id={this.CLIENT_ID}
-            ref={this.loginComponent}>
+            ref={this.loginComponent} scope={this.SCOPE}>
           </lf-login>
         </div>
 
