@@ -27,6 +27,7 @@ We welcome contributions and feedback. Please follow our [contributing guideline
 
 ## First Time Setup
 
+0. Clone the Repo
 1. Create a new Single Page App in [devconsole](https://app.laserfiche.com/devconsole/apps) and add the authentication redirect URI (e.g.: <https://myapp.example.com/lf-sample-app/>, <http://localhost:3000>) which is also the root page of this app.
 2. Open folder (containing package.json) with Visual Studio Code
 3. In `src/App.tsx` update the REDIRECT_URI and CLIENT_ID with the app client_id and redirect_uri as registered in step 1. You only need to update HOST_NAME if you are not using cloud production (laserfiche.com).
