@@ -31,10 +31,9 @@ We welcome contributions and feedback. Please follow our [contributing guideline
 1. Create a new Single Page App in [devconsole](https://app.laserfiche.com/devconsole/apps) and add the authentication redirect URI (e.g.: <https://myapp.example.com/lf-sample-app/>, <http://localhost:3000>) which is also the root page of this app.
 2. Open folder (containing package.json) with Visual Studio Code
 3. In `src/App.tsx` update the REDIRECT_URI and CLIENT_ID with the app client_id and redirect_uri as registered in step 1. You only need to update HOST_NAME if you are not using cloud production (laserfiche.com).
-4. Update the REGIONAL_DOMAIN if you need are using a different environment (i.e. laserfiche.ca).
-5. In VS Code, open a New Terminal window.
-6. Run `npm install` in root folder. This command installs dependencies packages.
-7. Run `npm start` in root folder. This runs the project on localhost. You can also you `npm run build` depending on how you want to host the application. See below for details.
+4. In VS Code, open a New Terminal window.
+5. Run `npm install` in root folder. This command installs dependencies packages.
+6. Run `npm start` in root folder. This runs the project on localhost. You can also you `npm run build` depending on how you want to host the application. See below for details.
 
 ## Build
 
