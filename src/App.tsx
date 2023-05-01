@@ -70,6 +70,7 @@ export default class App extends React.Component<
     popupErrorMessage: string;
   }> {
     REDIRECT_URI: string = 'http://localhost:3000'; // i.e http://localhost:3000, https://serverName/lf-sample/index.html
+    SCOPE: string = 'repository.Read repository.Write'; // Scope(s) requested by the app
     CLIENT_ID: string = '6bd54321-2737-4a42-985d-abac41375af5';
     HOST_NAME: string = 'a.clouddev.laserfiche.com'; // only add this if you are using a different environment (e.g. a.clouddev.laserfiche.com)
 
@@ -658,6 +659,7 @@ export default class App extends React.Component<
 
         <div className="lf-component-container lf-right-button">
           <lf-login redirect_uri={this.REDIRECT_URI}
+            scope={this.SCOPE}
             authorize_url_host_name={this.HOST_NAME} redirect_behavior="Replace" client_id={this.CLIENT_ID}
             ref={this.loginComponent}>
           </lf-login>
