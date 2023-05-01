@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import { LfFieldContainerComponent, LfLoginComponent, LfRepositoryBrowserComponent, LfToolbarComponent, LfTreeNode, ToolbarOption } from '@laserfiche/types-lf-ui-components';
+import { LfFieldContainerComponent, LfLoginComponent, LfRepositoryBrowserComponent, LfToolbarComponent, LfTreeNode, ToolbarOption, ColumnDef } from '@laserfiche/types-lf-ui-components';
 import { NgElement, WithProperties } from '@angular/elements';
 import { LfLocalizationService } from '@laserfiche/lf-js-utils';
 import { IRepositoryApiClientEx, LfFieldsService, LfRepoTreeNode, LfRepoTreeNodeService } from '@laserfiche/lf-ui-components-services';
@@ -69,9 +69,9 @@ export default class App extends React.Component<
     showNewFolderDialog: boolean;
     popupErrorMessage: string;
   }> {
-    REDIRECT_URI: string = 'REPLACE_WITH_YOUR_REDIRECT_URI'; // i.e http://localhost:3000, https://serverName/lf-sample/index.html
-    CLIENT_ID: string = 'REPLACE_WITH_YOUR_CLIENT_ID';
-    HOST_NAME: string = ''; // only add this if you are using a different region or environment (i.e. laserfiche.ca, eu.laserfiche.com)
+    REDIRECT_URI: string = 'http://localhost:3000'; // i.e http://localhost:3000, https://serverName/lf-sample/index.html
+    CLIENT_ID: string = '6bd54321-2737-4a42-985d-abac41375af5';
+    HOST_NAME: string = 'a.clouddev.laserfiche.com'; // only add this if you are using a different environment (e.g. a.clouddev.laserfiche.com)
 
   loginComponent: React.RefObject<NgElement & WithProperties<LfLoginComponent>>;
   repositoryBrowser: React.RefObject<NgElement & WithProperties<LfRepositoryBrowserComponent>>;
@@ -89,7 +89,7 @@ export default class App extends React.Component<
 
   constructor(props: any) {
     super(props);
-    this.loginComponent = React.createRef();
+    this.loginComponent = React.createRef<NgElement & WithProperties<LfLoginComponent>>();
     this.repositoryBrowser = React.createRef();
     this.fileInput = React.createRef();
     this.fieldContainer = React.createRef();
@@ -153,7 +153,7 @@ export default class App extends React.Component<
     const accessToken = this.loginComponent?.current?.authorization_credentials?.accessToken;
     if (accessToken) {
       this.addAuthorizationHeader(request, accessToken);
-      return { regionalDomain: this.HOST_NAME }; // update this if you are using a different region
+      return { regionalDomain: this.loginComponent.current?.account_endpoints?.regionalDomain ?? this.HOST_NAME}; // update this if you are using a different region
     }
     else {
       throw new Error('No access token');
@@ -305,10 +305,12 @@ export default class App extends React.Component<
 
   onClickBrowse = async () => {
     this.setState({ expandFolderBrowser: true }, async () => {
+      this.lfRepoTreeService!.columnIds = ['creationTime', 'lastModifiedTime', 'pageCount', 'templateName', 'creator'];
       await this.initializeTreeAsync();
       this.initializeToolbar();
       this.setShouldShowOpen();
       this.setShouldShowSelect();
+      this.setFakeColumns();
     });
   };
 
@@ -560,6 +562,36 @@ export default class App extends React.Component<
       shouldShowSelect: false
     });
     return;
+  }
+
+  setFakeColumns() {
+    const columns: ColumnDef[] = [
+      {
+        id: 'name',
+        displayName: 'Name',
+        defaultWidth: 'auto',
+        minWidthPx: 100,
+        resizable: true,
+        sortable: true,
+      },
+      {
+        id: 'creationTime',
+        displayName: 'Creation Time',
+        defaultWidth: 'auto',
+        minWidthPx: 100,
+        resizable: true,
+        sortable: true,
+      },
+      {
+        id: 'creator',
+        displayName: 'Author',
+        defaultWidth: 'auto',
+        minWidthPx: 100,
+        resizable: true,
+        sortable: true,
+      }
+    ];
+    this.repositoryBrowser?.current?.setColumnsToDisplay(columns);
   }
 
   setShouldShowOpen(): void {
