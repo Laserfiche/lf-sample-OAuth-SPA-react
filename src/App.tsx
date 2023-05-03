@@ -7,7 +7,8 @@ import { IRepositoryApiClientEx, LfFieldsService, LfRepoTreeNode, LfRepoTreeNode
 import { PathUtils } from '@laserfiche/lf-js-utils';
 import { PostEntryWithEdocMetadataRequest, RepositoryApiClient, FileParameter, PutFieldValsRequest, IRepositoryApiClient, FieldToUpdate, ValueToUpdate, EntryType, Shortcut, PostEntryChildrenRequest, PostEntryChildrenEntryType } from '@laserfiche/lf-repository-api-client';
 import { getEntryWebAccessUrl } from './url-utils';
-import Modal from './Modal/Modal';
+import NewFolderModal from './NewFolderModal/NewFolderModal';
+import EditColumnsModal from './EditColumnsModal/EditColumnsModal';
 
 const resources: Map<string, object> = new Map<string, object>([
   ['en-US', {
@@ -21,6 +22,7 @@ const resources: Map<string, object> = new Map<string, object>([
     'OPEN': 'Open',
     'REFRESH': 'Refresh',
     'NEW_FOLDER': 'New Folder',
+    'ADD_REMOVE_COLUMNS': 'Add/Remove Columns',
     'SELECT': 'Select',
     'CANCEL': 'Cancel',
     'ERROR_SAVING': 'Error Saving',
@@ -37,6 +39,7 @@ const resources: Map<string, object> = new Map<string, object>([
     'OPEN': 'Open - Spanish',
     'REFRESH': 'Refresh - Spanish',
     'NEW_FOLDER': 'New Folder - Spanish',
+    'ADD_REMOVE_COLUMNS': 'Add/Remove Columns - Spanish',
     'SELECT': 'Select - Spanish',
     'CANCEL': 'Cancel - Spanish',
     'ERROR_SAVING': 'Error Saving - Spanish',
@@ -67,7 +70,10 @@ export default class App extends React.Component<
     shouldShowSelect: boolean;
     shouldDisableSelect: boolean;
     showNewFolderDialog: boolean;
+    showEditColumnsDialog: boolean;
     popupErrorMessage: string;
+    selectedColumns: ColumnDef[];
+    allPossibleColumns: ColumnDef[];
   }> {
     REDIRECT_URI: string = 'http://localhost:3000'; // i.e http://localhost:3000, https://serverName/lf-sample/index.html
     SCOPE: string = 'repository.Read repository.Write'; // Scope(s) requested by the app
@@ -95,7 +101,14 @@ export default class App extends React.Component<
     this.fileInput = React.createRef();
     this.fieldContainer = React.createRef();
     this.toolBarElement = React.createRef();
-    this.setState({
+    // columnDefs for the state variables
+    const name: ColumnDef = {id: 'name',displayName: 'Name',defaultWidth: 'auto',minWidthPx: 100,resizable: true,sortable: true};
+    const creationTime: ColumnDef = {id: 'creationTime',displayName: 'Creation Time',defaultWidth: 'auto',resizable: true,sortable: true};
+    const lastModifiedTime: ColumnDef = {id: 'lastModifiedTime',displayName: 'Last Modified Time',defaultWidth: 'auto',resizable: true,sortable: true};
+    const pageCount: ColumnDef = {id: 'pageCount',displayName: 'Page Count',defaultWidth: 'auto',resizable: true,sortable: true};
+    const templateName: ColumnDef = {id: 'templateName',displayName: 'Template Name',defaultWidth: 'auto',resizable: true,sortable: true};
+    const creator: ColumnDef = {id: 'creator',displayName: 'Author', defaultWidth: 'auto',resizable: true,sortable: true};
+    this.state = {
       expandFolderBrowser: false,
       isLoggedIn: false,
       lfSelectedFolder: undefined,
@@ -103,8 +116,11 @@ export default class App extends React.Component<
       shouldShowSelect: false,
       shouldDisableSelect: false,
       showNewFolderDialog: false,
-      popupErrorMessage: ''
-    });
+      showEditColumnsDialog: false,
+      popupErrorMessage: '',
+      allPossibleColumns: [creationTime, lastModifiedTime, pageCount, templateName, creator],
+      selectedColumns: [name, creationTime, creator],
+    };
   }
 
   componentDidMount = async () => {
@@ -306,12 +322,12 @@ export default class App extends React.Component<
 
   onClickBrowse = async () => {
     this.setState({ expandFolderBrowser: true }, async () => {
-      this.lfRepoTreeService!.columnIds = ['creationTime', 'lastModifiedTime', 'pageCount', 'templateName', 'creator'];
+      this.lfRepoTreeService!.columnIds = this.state.allPossibleColumns.map(columnDef => columnDef.id);
       await this.initializeTreeAsync();
       this.initializeToolbar();
       this.setShouldShowOpen();
       this.setShouldShowSelect();
-      this.setFakeColumns();
+      this.setColumns(this.state.selectedColumns);
     });
   };
 
@@ -407,6 +423,15 @@ export default class App extends React.Component<
           tag: {
             handler: () => {
               this.setState({ showNewFolderDialog: true });
+            }
+          }
+        },
+        {
+          name: this.ADD_REMOVE_COLUMNS,
+          disabled: false,
+          tag: {
+            handler: () => {
+              this.setState({ showEditColumnsDialog: true});
             }
           }
         },
@@ -565,33 +590,7 @@ export default class App extends React.Component<
     return;
   }
 
-  setFakeColumns() {
-    const columns: ColumnDef[] = [
-      {
-        id: 'name',
-        displayName: 'Name',
-        defaultWidth: 'auto',
-        minWidthPx: 100,
-        resizable: true,
-        sortable: true,
-      },
-      {
-        id: 'creationTime',
-        displayName: 'Creation Time',
-        defaultWidth: 'auto',
-        minWidthPx: 100,
-        resizable: true,
-        sortable: true,
-      },
-      {
-        id: 'creator',
-        displayName: 'Author',
-        defaultWidth: 'auto',
-        minWidthPx: 100,
-        resizable: true,
-        sortable: true,
-      }
-    ];
+  setColumns(columns: ColumnDef[]) {
     this.repositoryBrowser?.current?.setColumnsToDisplay(columns);
   }
 
@@ -601,11 +600,15 @@ export default class App extends React.Component<
     });
   }
 
-  showDialog = () => {
+  showNewFolderDialog = () => {
     this.setState({ showNewFolderDialog: true });
   };
 
-  hideDialog = async (folderName?: string) => {
+  showEditColumnsDialog = () => {
+    this.setState({ showEditColumnsDialog: true});
+  };
+
+  hideNewFolderDialog = async (folderName?: string) => {
 
     if (folderName) {
       if (!this.repositoryBrowser?.current?.currentFolder) {
@@ -628,6 +631,14 @@ export default class App extends React.Component<
     else {
       this.setState({ showNewFolderDialog: false });
     }
+  };
+
+  hideEditColumnsDialog = async (newColumns?: ColumnDef[]) => {
+    if (newColumns){
+      this.setState({ selectedColumns: newColumns });
+      this.setColumns(newColumns);
+    }
+    this.setState({ showEditColumnsDialog: false });
   };
 
   async addNewFolderAsync(parentNode: LfTreeNode, folderName: string): Promise<void> {
@@ -666,7 +677,8 @@ export default class App extends React.Component<
         </div>
 
         <div hidden={!this.state?.isLoggedIn}>
-          {this.state?.showNewFolderDialog && <Modal onClose={this.hideDialog.bind(this)} errorMessage={this.state?.popupErrorMessage} />}
+          {this.state?.showNewFolderDialog && <NewFolderModal onClose={this.hideNewFolderDialog.bind(this)} errorMessage={this.state?.popupErrorMessage} />}
+          {this.state?.showEditColumnsDialog && <EditColumnsModal onClose={this.hideEditColumnsDialog.bind(this)} errorMessage={this.state?.popupErrorMessage} initialColumnsSelected={this.state?.selectedColumns} allColumnOptions={this.state?.allPossibleColumns} />}
           <button className="lf-refresh-button" onClick={() => this.onClickRefreshAsync()}>Refresh</button>
           <div className="folder-browse-select lf-component-container">
             <span>
@@ -743,6 +755,7 @@ export default class App extends React.Component<
   OPEN = this.localizationService.getString('OPEN');
   REFRESH = this.localizationService.getString('REFRESH');
   NEW_FOLDER = this.localizationService.getString('NEW_FOLDER');
+  ADD_REMOVE_COLUMNS = this.localizationService.getString('ADD_REMOVE_COLUMNS');
   SELECT = this.localizationService.getString('SELECT');
   CANCEL = this.localizationService.getString('CANCEL');
   UNKNOWN_ERROR = this.localizationService.getString('UNKNOWN_ERROR');

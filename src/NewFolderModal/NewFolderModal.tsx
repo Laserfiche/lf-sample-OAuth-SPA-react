@@ -1,6 +1,6 @@
 import { LfLocalizationService } from "@laserfiche/lf-js-utils";
 import React, { ChangeEvent } from "react";
-import './Modal.css';
+import './NewFolderModal.css';
 
 const resources: Map<string, object> = new Map<string, object>([
   ['en-US', {
@@ -16,7 +16,7 @@ const resources: Map<string, object> = new Map<string, object>([
     'NEW_FOLDER': 'New Folder - Spanish',
   }]
 ]);
-export default class Modal extends React.Component<{onClose: (folderName?: string) => Promise<void>; errorMessage: string}, {folderName: string; open: boolean}> {
+export default class NewFolderModal extends React.Component<{onClose: (folderName?: string) => Promise<void>; errorMessage: string}, {folderName: string; open: boolean}> {
 
     localizationService: LfLocalizationService = new LfLocalizationService(resources);
     closeOnEscapeKeyDown = (e:KeyboardEvent) => {
