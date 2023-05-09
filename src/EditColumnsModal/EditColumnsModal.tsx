@@ -34,7 +34,6 @@ export default class EditColumnsModal extends React.Component<{onClose: (columns
             open: false
 
         };
-        console.log(this.state.columnsSelected);
     }
 
     componentDidMount() {
@@ -71,7 +70,7 @@ export default class EditColumnsModal extends React.Component<{onClose: (columns
       render() {
 
         return (
-            <div className="edit-columns-dialog-modal" onClick={() => this.closeDialog()}>
+            <div className="edit-columns-dialog-modal">
                 <div className={`edit-columns-dialog-modal-content ${this.state?.open ? 'show' : ''}`}  id="edit-columns-dialog-content" onClick={e => e.stopPropagation()}>
                     <div className="edit-columns-dialog-modal-title">
                         <span className="lf-dialog-title lf-popup-dialog-title">{this.ADD_REMOVE_COLUMNS}</span>

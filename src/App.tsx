@@ -600,14 +600,6 @@ export default class App extends React.Component<
     });
   }
 
-  showNewFolderDialog = () => {
-    this.setState({ showNewFolderDialog: true });
-  };
-
-  showEditColumnsDialog = () => {
-    this.setState({ showEditColumnsDialog: true});
-  };
-
   hideNewFolderDialog = async (folderName?: string) => {
 
     if (folderName) {

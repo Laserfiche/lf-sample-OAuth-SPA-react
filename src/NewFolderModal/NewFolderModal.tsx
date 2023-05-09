@@ -61,7 +61,7 @@ export default class NewFolderModal extends React.Component<{onClose: (folderNam
     render() {
 
     return (
-      <div className="new-folder-dialog-modal" onClick={() => this.closeDialog()}>
+      <div className="new-folder-dialog-modal">
         <div className={`new-folder-dialog-modal-content ${this.state?.open ? 'show' : ''}`} id="new-folder-dialog-content" onClick={e => e.stopPropagation()}>
             <div className="new-folder-dialog-modal-title"> 
             <span className="lf-dialog-title lf-popup-dialog-title">{this.NEW_FOLDER}</span>
