@@ -75,7 +75,7 @@ export default class NewFolderModal extends React.Component<{onClose: (folderNam
                 <input id="new-folder-name-input" className="new-folder-name-input" onChange={e => this.handleInputChange(e)} ></input>
         </div>
         <div className="lf-dialog-actions">
-            <button onClick={() => this.closeDialog(this.state?.folderName)} disabled={!this.state?.folderName || this.state?.folderName.trim().length === 0} className="lf-button primary-button">{this.OK}</button>
+            <button onClick={() => this.closeDialog(this.state?.folderName)} disabled={!(this.state?.folderName?.length > 0)} className="lf-button primary-button">{this.OK}</button>
             <button onClick={() => this.closeDialog()} className="lf-button sec-button margin-left-button">{this.CANCEL}</button>
         </div>
         </div>

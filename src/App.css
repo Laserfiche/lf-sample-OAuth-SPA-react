@@ -47,7 +47,7 @@ svg#close {
   justify-content: flex-end;
 }
 
-.repository-browser{
+.repository-browser {
   flex-direction: row;
   align-items: center;
   display: flex;
@@ -80,5 +80,5 @@ lf-toolbar {
 
 lf-repository-browser {
   position: absolute;
-  left: 0
+  left: 0;
 }
