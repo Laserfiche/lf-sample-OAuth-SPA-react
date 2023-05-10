@@ -274,11 +274,13 @@ export default class App extends React.Component<
       this.loginComponent?.current?.authorization_credentials?.accessToken;
     if (accessToken) {
       this.addAuthorizationHeader(request, accessToken);
-      return {
-        regionalDomain:
-          this.loginComponent.current?.account_endpoints?.regionalDomain ??
-          this.HOST_NAME,
-      };
+      let regionalDomain: string | undefined =
+        this.loginComponent.current?.account_endpoints?.regionalDomain;
+      if (!regionalDomain) {
+        console.log('could not get regionalDomain from loginComponent');
+        regionalDomain = this.HOST_NAME;
+      }
+      return { regionalDomain };
     } else {
       throw new Error("No access token");
     }

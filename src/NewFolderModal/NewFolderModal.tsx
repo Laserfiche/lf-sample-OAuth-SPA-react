@@ -1,5 +1,5 @@
 import { LfLocalizationService } from "@laserfiche/lf-js-utils";
-import React, { ChangeEvent } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import "./NewFolderModal.css";
 
 const resources: Map<string, object> = new Map<string, object>([
@@ -22,107 +22,97 @@ const resources: Map<string, object> = new Map<string, object>([
     },
   ],
 ]);
-export default class NewFolderModal extends React.Component<
-  { onClose: (folderName?: string) => Promise<void>; errorMessage: string },
-  { folderName: string; open: boolean }
-> {
-  localizationService: LfLocalizationService = new LfLocalizationService(
+
+
+export default function NewFolderModalComponent(props:{onClose: (folderName?: string) => Promise<void>; errorMessage: string}) {
+  const [ folderName, setFolderName ] = useState("");
+  const [ open, setOpen ] = useState(false);
+  const localizationService: LfLocalizationService = new LfLocalizationService(
     resources
   );
-  closeOnEscapeKeyDown = (e: KeyboardEvent) => {
+
+  const NAME = localizationService.getString("NAME");
+  const OK = localizationService.getString("OK");
+  const CANCEL = localizationService.getString("CANCEL");
+  const NEW_FOLDER = localizationService.getString("NEW_FOLDER");
+
+  const closeOnEscapeKeyDown = (e: KeyboardEvent) => {
     if (e.code === "Escape") {
-      this.props.onClose();
+      props.onClose();
     }
   };
 
-  constructor(props: any) {
-    super(props);
-    this.setState({
-      folderName: "",
-      open: false,
-    });
-  }
-
-  componentDidMount() {
-    document.body.addEventListener("keydown", this.closeOnEscapeKeyDown);
+  useEffect( () => {
+    document.body.addEventListener("keydown", closeOnEscapeKeyDown);
     setTimeout(() => {
-      this.setState({ open: true });
+      setOpen(true);
     });
-  }
+  }, []);
 
-  handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const target = event.target as HTMLInputElement;
     const folderName = target?.value;
 
-    this.setState({
-      folderName: folderName,
-    });
+    setFolderName(folderName);
   };
 
-  closeDialog = (folderName?: string) => {
-    this.props.onClose(folderName);
+  const closeDialog = (folderName?: string) => {
+    props.onClose(folderName);
   };
 
-  render() {
-    return (
-      <div className="new-folder-dialog-modal">
-        <div
-          className={`new-folder-dialog-modal-content ${
-            this.state?.open ? "show" : ""
-          }`}
-          id="new-folder-dialog-content"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="new-folder-dialog-modal-title">
-            <span className="lf-dialog-title lf-popup-dialog-title">
-              {this.NEW_FOLDER}
+  return (
+    <div className="new-folder-dialog-modal">
+      <div
+        className={`new-folder-dialog-modal-content ${
+          open ? "show" : ""
+        }`}
+        id="new-folder-dialog-content"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="new-folder-dialog-modal-title">
+          <span className="lf-dialog-title lf-popup-dialog-title">
+            {NEW_FOLDER}
+          </span>
+          <button
+            className="lf-close-button"
+            id="new-folder-dialog-modal-close-dialog"
+            onClick={() => closeDialog()}
+          >
+            <span
+              id="new-folder-dialog-close-icon"
+              className="material-icons"
+            >
+              close
             </span>
-            <button
-              className="lf-close-button"
-              id="new-folder-dialog-modal-close-dialog"
-              onClick={() => this.closeDialog()}
-            >
-              <span
-                id="new-folder-dialog-close-icon"
-                className="material-icons"
-              >
-                close
-              </span>
-            </button>
-          </div>
-          <div className="lf-dialog-message">
-            <p hidden={!this.props.errorMessage} className="popup-error">
-              {this.props.errorMessage}
-            </p>
-            <p className="new-folder-label">{this.NAME}</p>
-            <input
-              id="new-folder-name-input"
-              className="new-folder-name-input"
-              onChange={(e) => this.handleInputChange(e)}
-            ></input>
-          </div>
-          <div className="lf-dialog-actions">
-            <button
-              onClick={() => this.closeDialog(this.state?.folderName)}
-              disabled={!(this.state?.folderName?.length > 0)}
-              className="lf-button primary-button"
-            >
-              {this.OK}
-            </button>
-            <button
-              onClick={() => this.closeDialog()}
-              className="lf-button sec-button margin-left-button"
-            >
-              {this.CANCEL}
-            </button>
-          </div>
+          </button>
+        </div>
+        <div className="lf-dialog-message">
+          <p hidden={!props.errorMessage} className="popup-error">
+            {props.errorMessage}
+          </p>
+          <p className="new-folder-label">{NAME}</p>
+          <input
+            id="new-folder-name-input"
+            className="new-folder-name-input"
+            onChange={(e) => handleInputChange(e)}
+          ></input>
+        </div>
+        <div className="lf-dialog-actions">
+          <button
+            onClick={() => closeDialog(folderName)}
+            disabled={!(folderName.length > 0)}
+            className="lf-button primary-button"
+          >
+            {OK}
+          </button>
+          <button
+            onClick={() => closeDialog()}
+            className="lf-button sec-button margin-left-button"
+          >
+            {CANCEL}
+          </button>
         </div>
       </div>
-    );
-  }
-
-  NAME = this.localizationService.getString("NAME");
-  OK = this.localizationService.getString("OK");
-  CANCEL = this.localizationService.getString("CANCEL");
-  NEW_FOLDER = this.localizationService.getString("NEW_FOLDER");
+    </div>
+  );
 }

@@ -51,7 +51,7 @@ export default function EditColumnsModal(props: {
       setOpen(true);
     });
 
-  });
+  }, []);
 
   const closeDialog = (columns?: ColumnDef[]) => {
     props.onClose(columns);
