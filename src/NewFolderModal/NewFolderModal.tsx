@@ -24,7 +24,7 @@ const resources: Map<string, object> = new Map<string, object>([
 ]);
 
 
-export default function NewFolderModalComponent(props:{onClose: (folderName?: string) => Promise<void>; errorMessage: string}) {
+export default function NewFolderModalComponent(props:{onClose: (folderName?: string) => Promise<void>; errorMessage?: string}) {
   const [ folderName, setFolderName ] = useState("");
   const [ open, setOpen ] = useState(false);
   const localizationService: LfLocalizationService = new LfLocalizationService(
@@ -44,9 +44,6 @@ export default function NewFolderModalComponent(props:{onClose: (folderName?: st
 
   useEffect( () => {
     document.body.addEventListener("keydown", closeOnEscapeKeyDown);
-    setTimeout(() => {
-      setOpen(true);
-    });
   }, []);
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {

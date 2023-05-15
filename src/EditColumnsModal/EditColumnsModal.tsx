@@ -47,10 +47,6 @@ export default function EditColumnsModal(props: {
   };
   useEffect(() => {
     document.body.addEventListener("keydown", closeOnEscapeKeyDown);
-    setTimeout(() => {
-      setOpen(true);
-    });
-
   }, []);
 
   const closeDialog = (columns?: ColumnDef[]) => {
@@ -63,8 +59,7 @@ export default function EditColumnsModal(props: {
     if (columnsSelected.includes(column)) {
       newSelected = [...columnsSelected.filter((c) => c != column)];
     } else {
-      newSelected = [...columnsSelected];
-      newSelected.push(column);
+      newSelected = columnsSelected.concat([column]);
     }
     setColumnsSelected(newSelected);
   }

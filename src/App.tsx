@@ -1,6 +1,6 @@
 import React from "react";
 import "./App.css";
-import config from './config';
+import config from "./config";
 import {
   LfFieldContainerComponent,
   LfLoginComponent,
@@ -103,7 +103,7 @@ export default class App extends React.Component<
     shouldDisableSelect: boolean;
     showNewFolderDialog: boolean;
     showEditColumnsDialog: boolean;
-    popupErrorMessage: string;
+    popupErrorMessage?: string;
     selectedColumns: ColumnDef[];
     allPossibleColumns: ColumnDef[];
   }
@@ -191,7 +191,7 @@ export default class App extends React.Component<
       shouldDisableSelect: false,
       showNewFolderDialog: false,
       showEditColumnsDialog: false,
-      popupErrorMessage: "",
+      popupErrorMessage: undefined,
       allPossibleColumns: [
         creationTime,
         lastModifiedTime,
@@ -273,7 +273,7 @@ export default class App extends React.Component<
       let regionalDomain: string | undefined =
         this.loginComponent.current?.account_endpoints?.regionalDomain;
       if (!regionalDomain) {
-        console.log('could not get regionalDomain from loginComponent');
+        console.log("could not get regionalDomain from loginComponent");
         regionalDomain = config.HOST_NAME;
       }
       return { regionalDomain };
@@ -798,7 +798,11 @@ export default class App extends React.Component<
       entryType: PostEntryChildrenEntryType.Folder,
     });
     const repoId: string = await this.repoClient.getCurrentRepoId();
-    await this.repoClient?.entriesClient.createOrCopyEntry({repoId,entryId,request,});
+    await this.repoClient?.entriesClient.createOrCopyEntry({
+      repoId,
+      entryId,
+      request,
+    });
   }
   // react render method
   render() {
