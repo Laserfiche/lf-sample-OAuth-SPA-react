@@ -1,6 +1,6 @@
-import React from "react";
-import "./App.css";
-import config from "./config";
+import React from 'react';
+import './App.css';
+import config from './config';
 import {
   LfFieldContainerComponent,
   LfLoginComponent,
@@ -9,16 +9,16 @@ import {
   LfTreeNode,
   ToolbarOption,
   ColumnDef,
-} from "@laserfiche/types-lf-ui-components";
-import { NgElement, WithProperties } from "@angular/elements";
-import { LfLocalizationService } from "@laserfiche/lf-js-utils";
+} from '@laserfiche/types-lf-ui-components';
+import { NgElement, WithProperties } from '@angular/elements';
+import { LfLocalizationService } from '@laserfiche/lf-js-utils';
 import {
   IRepositoryApiClientEx,
   LfFieldsService,
   LfRepoTreeNode,
   LfRepoTreeNodeService,
-} from "@laserfiche/lf-ui-components-services";
-import { PathUtils } from "@laserfiche/lf-js-utils";
+} from '@laserfiche/lf-ui-components-services';
+import { PathUtils } from '@laserfiche/lf-js-utils';
 import {
   PostEntryWithEdocMetadataRequest,
   RepositoryApiClient,
@@ -31,50 +31,50 @@ import {
   Shortcut,
   PostEntryChildrenRequest,
   PostEntryChildrenEntryType,
-} from "@laserfiche/lf-repository-api-client";
-import { getEntryWebAccessUrl } from "./url-utils";
-import NewFolderModal from "./NewFolderModal/NewFolderModal";
-import EditColumnsModal from "./EditColumnsModal/EditColumnsModal";
+} from '@laserfiche/lf-repository-api-client';
+import { getEntryWebAccessUrl } from './url-utils';
+import NewFolderModal from './NewFolderModal/NewFolderModal';
+import EditColumnsModal from './EditColumnsModal/EditColumnsModal';
 
 const resources: Map<string, object> = new Map<string, object>([
   [
-    "en-US",
+    'en-US',
     {
-      FOLDER_BROWSER_PLACEHOLDER: "No folder selected",
-      SAVE_TO_LASERFICHE: "Save to Laserfiche",
-      CLICK_TO_UPLOAD: "Click to upload file",
-      SELECTED_FOLDER: "Selected Folder: ",
-      FILE_NAME: "File Name: ",
-      BROWSE: "Browse",
-      OPEN_IN_LASERFICHE: "Open in Laserfiche",
-      OPEN: "Open",
-      REFRESH: "Refresh",
-      NEW_FOLDER: "New Folder",
-      ADD_REMOVE_COLUMNS: "Add/Remove Columns",
-      SELECT: "Select",
-      CANCEL: "Cancel",
-      ERROR_SAVING: "Error Saving",
-      UNKNOWN_ERROR: "Unknown Error",
+      FOLDER_BROWSER_PLACEHOLDER: 'No folder selected',
+      SAVE_TO_LASERFICHE: 'Save to Laserfiche',
+      CLICK_TO_UPLOAD: 'Click to upload file',
+      SELECTED_FOLDER: 'Selected Folder: ',
+      FILE_NAME: 'File Name: ',
+      BROWSE: 'Browse',
+      OPEN_IN_LASERFICHE: 'Open in Laserfiche',
+      OPEN: 'Open',
+      REFRESH: 'Refresh',
+      NEW_FOLDER: 'New Folder',
+      ADD_REMOVE_COLUMNS: 'Add/Remove Columns',
+      SELECT: 'Select',
+      CANCEL: 'Cancel',
+      ERROR_SAVING: 'Error Saving',
+      UNKNOWN_ERROR: 'Unknown Error',
     },
   ],
   [
-    "es-MX",
+    'es-MX',
     {
-      FOLDER_BROWSER_PLACEHOLDER: "No folder selected - Spanish",
-      SAVE_TO_LASERFICHE: "Save to Laserfiche - Spanish",
-      CLICK_TO_UPLOAD: "Click to upload file - Spanish",
-      SELECTED_FOLDER: "Selected Folder: - Spanish",
-      FILE_NAME: "File Name: - Spanish",
-      BROWSE: "Browse - Spanish",
-      OPEN_IN_LASERFICHE: "Open in Laserfiche - Spanish",
-      OPEN: "Open - Spanish",
-      REFRESH: "Refresh - Spanish",
-      NEW_FOLDER: "New Folder - Spanish",
-      ADD_REMOVE_COLUMNS: "Add/Remove Columns - Spanish",
-      SELECT: "Select - Spanish",
-      CANCEL: "Cancel - Spanish",
-      ERROR_SAVING: "Error Saving - Spanish",
-      UNKNOWN_ERROR: "Unknown Error - Spanish",
+      FOLDER_BROWSER_PLACEHOLDER: 'No folder selected - Spanish',
+      SAVE_TO_LASERFICHE: 'Save to Laserfiche - Spanish',
+      CLICK_TO_UPLOAD: 'Click to upload file - Spanish',
+      SELECTED_FOLDER: 'Selected Folder: - Spanish',
+      FILE_NAME: 'File Name: - Spanish',
+      BROWSE: 'Browse - Spanish',
+      OPEN_IN_LASERFICHE: 'Open in Laserfiche - Spanish',
+      OPEN: 'Open - Spanish',
+      REFRESH: 'Refresh - Spanish',
+      NEW_FOLDER: 'New Folder - Spanish',
+      ADD_REMOVE_COLUMNS: 'Add/Remove Columns - Spanish',
+      SELECT: 'Select - Spanish',
+      CANCEL: 'Cancel - Spanish',
+      ERROR_SAVING: 'Error Saving - Spanish',
+      UNKNOWN_ERROR: 'Unknown Error - Spanish',
     },
   ],
 ]);
@@ -140,45 +140,45 @@ export default class App extends React.Component<
     this.fieldContainer = React.createRef();
     this.toolBarElement = React.createRef();
     const name: ColumnDef = {
-      id: "name",
-      displayName: "Name",
-      defaultWidth: "auto",
+      id: 'name',
+      displayName: 'Name',
+      defaultWidth: 'auto',
       minWidthPx: 100,
       resizable: true,
       sortable: true,
     };
     const creationTime: ColumnDef = {
-      id: "creationTime",
-      displayName: "Creation Time",
-      defaultWidth: "auto",
+      id: 'creationTime',
+      displayName: 'Creation Time',
+      defaultWidth: 'auto',
       resizable: true,
       sortable: true,
     };
     const lastModifiedTime: ColumnDef = {
-      id: "lastModifiedTime",
-      displayName: "Last Modified Time",
-      defaultWidth: "auto",
+      id: 'lastModifiedTime',
+      displayName: 'Last Modified Time',
+      defaultWidth: 'auto',
       resizable: true,
       sortable: true,
     };
     const pageCount: ColumnDef = {
-      id: "pageCount",
-      displayName: "Page Count",
-      defaultWidth: "auto",
+      id: 'pageCount',
+      displayName: 'Page Count',
+      defaultWidth: 'auto',
       resizable: true,
       sortable: true,
     };
     const templateName: ColumnDef = {
-      id: "templateName",
-      displayName: "Template Name",
-      defaultWidth: "auto",
+      id: 'templateName',
+      displayName: 'Template Name',
+      defaultWidth: 'auto',
       resizable: true,
       sortable: true,
     };
     const creator: ColumnDef = {
-      id: "creator",
-      displayName: "Author",
-      defaultWidth: "auto",
+      id: 'creator',
+      displayName: 'Author',
+      defaultWidth: 'auto',
       resizable: true,
       sortable: true,
     };
@@ -205,14 +205,14 @@ export default class App extends React.Component<
 
   componentDidMount = async () => {
     this.loginComponent?.current?.addEventListener(
-      "loginCompleted",
+      'loginCompleted',
       this.loginCompleted
     );
     this.loginComponent?.current?.addEventListener(
-      "logoutCompleted",
+      'logoutCompleted',
       this.logoutCompleted
     );
-    this.fileInput?.current?.addEventListener("change", this.selectFile);
+    this.fileInput?.current?.addEventListener('change', this.selectFile);
     await this.getAndInitializeRepositoryClientAndServicesAsync();
   };
 
@@ -234,7 +234,7 @@ export default class App extends React.Component<
       await this.ensureRepoClientInitializedAsync();
 
       if (!this.repoClient) {
-        throw new Error("repoClient is undefined.");
+        throw new Error('repoClient is undefined.');
       }
       // create the tree service to interact with the LF Api
       this.lfRepoTreeService = new LfRepoTreeNodeService(this.repoClient);
@@ -248,11 +248,11 @@ export default class App extends React.Component<
       // create the fields service to let the field component interact with Laserfiche
       this.fieldsService = new LfFieldsService(this.repoClient);
       this.fieldContainer.current?.addEventListener(
-        "dialogOpened",
+        'dialogOpened',
         this.onDialogOpened
       );
       this.fieldContainer.current?.addEventListener(
-        "dialogClosed",
+        'dialogClosed',
         this.onDialogClosed
       );
       await this.fieldContainer.current?.initAsync(this.fieldsService);
@@ -273,12 +273,12 @@ export default class App extends React.Component<
       let regionalDomain: string | undefined =
         this.loginComponent.current?.account_endpoints?.regionalDomain;
       if (!regionalDomain) {
-        console.log("could not get regionalDomain from loginComponent");
+        console.log('could not get regionalDomain from loginComponent');
         regionalDomain = config.HOST_NAME;
       }
       return { regionalDomain };
     } else {
-      throw new Error("No access token");
+      throw new Error('No access token');
     }
   };
 
@@ -312,7 +312,7 @@ export default class App extends React.Component<
     if (repo.repoId && repo.repoName) {
       return { repoId: repo.repoId, repoName: repo.repoName };
     }
-    throw new Error("Current repoId undefined.");
+    throw new Error('Current repoId undefined.');
   };
 
   async ensureRepoClientInitializedAsync(): Promise<void> {
@@ -332,10 +332,10 @@ export default class App extends React.Component<
         _repoName: undefined,
         getCurrentRepoId: async () => {
           if (this.repoClient?._repoId) {
-            console.log("getting id from cache");
+            console.log('getting id from cache');
             return this.repoClient._repoId;
           } else {
-            console.log("getting id from api");
+            console.log('getting id from api');
             const repo = (await this.getCurrentRepo()).repoId;
             this.repoClient!._repoId = repo;
             return repo;
@@ -360,8 +360,8 @@ export default class App extends React.Component<
     accessToken: string | undefined
   ) {
     const headers: Headers | undefined = new Headers(request.headers);
-    const AUTH = "Authorization";
-    headers.set(AUTH, "Bearer " + accessToken);
+    const AUTH = 'Authorization';
+    headers.set(AUTH, 'Bearer ' + accessToken);
     request.headers = headers;
   }
 
@@ -375,22 +375,22 @@ export default class App extends React.Component<
       } else {
         const baseName: string = PathUtils.getLastPathSegment(displayPath);
         if (!baseName || baseName.length === 0) {
-          return "\\";
+          return '\\';
         } else {
           return baseName;
         }
       }
     } else {
-      return this.localizationService.getString("FOLDER_BROWSER_PLACEHOLDER");
+      return this.localizationService.getString('FOLDER_BROWSER_PLACEHOLDER');
     }
   }
 
   onSelectFolder = async () => {
     if (!this.repoClient) {
-      throw new Error("Repo Client is undefined.");
+      throw new Error('Repo Client is undefined.');
     }
     if (!this.loginComponent.current?.account_endpoints) {
-      throw new Error("LfLoginComponent is not found.");
+      throw new Error('LfLoginComponent is not found.');
     }
     const selectedNode = this.repositoryBrowser.current
       ?.currentFolder as LfRepoTreeNode;
@@ -409,7 +409,7 @@ export default class App extends React.Component<
             repoId,
             waUrl,
             selectedNode.isContainer
-          ) ?? "",
+          ) ?? '',
         selectedFolderName: this.getFolderNameText(entryId, selectedFolderPath),
         selectedFolderPath: selectedFolderPath,
       },
@@ -451,7 +451,7 @@ export default class App extends React.Component<
 
   async initializeTreeAsync() {
     if (!this.repoClient) {
-      throw new Error("RepoId is undefined");
+      throw new Error('RepoId is undefined');
     }
     let focusedNode: LfRepoTreeNode | undefined;
     if (this.state?.lfSelectedFolder) {
@@ -477,7 +477,7 @@ export default class App extends React.Component<
     if (this.repositoryBrowser?.current) {
       this.repositoryBrowser.current.isSelectable = this.isNodeSelectable;
       this.repositoryBrowser.current.addEventListener(
-        "entrySelected",
+        'entrySelected',
         this.onEntrySelected
       );
     }
@@ -507,13 +507,13 @@ export default class App extends React.Component<
   onDialogOpened = () => {
     // "hack" for add remove dialog on smaller screen
     window.scrollTo({ top: 0, left: 0 });
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow = 'hidden';
   };
 
   onDialogClosed = () => {
     // "hack" for add remove dialog on smaller screen
     document.body.scrollTo({ top: 0, left: 0 });
-    document.body.style.overflow = "auto";
+    document.body.style.overflow = 'auto';
   };
 
   private updateToolbarOptions() {
@@ -542,7 +542,7 @@ export default class App extends React.Component<
           tag: {
             handler: async () => {
               await this.repositoryBrowser?.current?.refreshAsync();
-              console.log("refresh");
+              console.log('refresh');
             },
           },
         },
@@ -567,7 +567,7 @@ export default class App extends React.Component<
       ];
       this.updateToolbarOptions();
       this.toolBarElement.current.addEventListener(
-        "optionSelected",
+        'optionSelected',
         this.handleToolBarOption
       );
     }
@@ -581,7 +581,7 @@ export default class App extends React.Component<
   private async createMetadataRequestAsync(): Promise<PostEntryWithEdocMetadataRequest> {
     const fieldValues = this.fieldContainer?.current?.getFieldValues() ?? {};
     const templateName =
-      this.fieldContainer?.current?.getTemplateValue()?.name ?? "";
+      this.fieldContainer?.current?.getTemplateValue()?.name ?? '';
     const formattedFieldValues:
       | {
           [key: string]: FieldToUpdate;
@@ -622,7 +622,7 @@ export default class App extends React.Component<
   // input handler methods
 
   get displayFileName(): string {
-    const rawFileName = this.state?.selectedFile?.name ?? "";
+    const rawFileName = this.state?.selectedFile?.name ?? '';
     return PathUtils.removeFileExtension(rawFileName);
   }
 
@@ -633,8 +633,8 @@ export default class App extends React.Component<
   selectFile = () => {
     const files = this.fileInput?.current?.files;
     const fileSelected = files?.item(0) ?? undefined;
-    this.fileName = PathUtils.removeFileExtension(fileSelected?.name ?? "");
-    this.fileExtension = PathUtils.getFileExtension(fileSelected?.name ?? "");
+    this.fileName = PathUtils.removeFileExtension(fileSelected?.name ?? '');
+    this.fileExtension = PathUtils.getFileExtension(fileSelected?.name ?? '');
     this.setState({ selectedFile: fileSelected });
   };
 
@@ -654,14 +654,14 @@ export default class App extends React.Component<
 
   onClickSave = async () => {
     if (!this.repoClient) {
-      throw new Error("repoClient is undefined");
+      throw new Error('repoClient is undefined');
     }
     if (!this.state?.lfSelectedFolder) {
-      throw new Error("no entry is selected");
+      throw new Error('no entry is selected');
     }
     const valid = this.fieldContainer?.current?.forceValidation();
     if (valid) {
-      const fileNameWithExtension = this.fileName + "." + this.fileExtension;
+      const fileNameWithExtension = this.fileName + '.' + this.fileExtension;
       const edocBlob: FileParameter = {
         data: this.state?.selectedFile as Blob,
         fileName: fileNameWithExtension,
@@ -682,36 +682,36 @@ export default class App extends React.Component<
           });
         const currentSelectedEntry = currentSelectedByPathResponse.entry;
         if (!currentSelectedEntry?.id) {
-          throw new Error("getEntryByPath returns entry with undefined id");
+          throw new Error('getEntryByPath returns entry with undefined id');
         }
         let parentEntryId = currentSelectedEntry.id;
         if (currentSelectedEntry.entryType == EntryType.Shortcut) {
           const shortcut = currentSelectedEntry as Shortcut;
           if (!shortcut.targetId) {
-            throw new Error("shortcut has undefined targetId");
+            throw new Error('shortcut has undefined targetId');
           }
           parentEntryId = shortcut.targetId;
         }
         await this.repoClient.entriesClient.importDocument({
           repoId: await this.repoClient.getCurrentRepoId(),
           parentEntryId,
-          fileName: this.fileName ?? "",
+          fileName: this.fileName ?? '',
           autoRename: true,
           electronicDocument: edocBlob,
           request: entryRequest,
         });
-        window.alert("Successfully saved document to Laserfiche");
+        window.alert('Successfully saved document to Laserfiche');
       } catch (err: any) {
         console.error(err);
         window.alert(
-          `${this.localizationService.getString("ERROR_SAVING")}: ${
+          `${this.localizationService.getString('ERROR_SAVING')}: ${
             err.message
           }`
         );
       }
     } else {
-      console.warn("metadata invalid");
-      window.alert("One or more fields is invalid. Please fix and try again");
+      console.warn('metadata invalid');
+      window.alert('One or more fields is invalid. Please fix and try again');
     }
   };
 
@@ -755,7 +755,7 @@ export default class App extends React.Component<
   hideNewFolderDialog = async (folderName?: string) => {
     if (folderName) {
       if (!this.repositoryBrowser?.current?.currentFolder) {
-        throw new Error("repositoryBrowser has no currently opened folder.");
+        throw new Error('repositoryBrowser has no currently opened folder.');
       }
       try {
         await this.addNewFolderAsync(
@@ -789,7 +789,7 @@ export default class App extends React.Component<
     folderName: string
   ): Promise<void> {
     if (!this.repoClient) {
-      throw new Error("repoClient is undefined");
+      throw new Error('repoClient is undefined');
     }
     const entryId =
       (parentNode as LfRepoTreeNode).targetId ?? parseInt(parentNode.id, 10);
@@ -807,18 +807,18 @@ export default class App extends React.Component<
   // react render method
   render() {
     return (
-      <div className="App">
-        <header className="App-header"></header>
-        <h2 className="lf-sample-app-title">
+      <div className='App'>
+        <header className='App-header'></header>
+        <h2 className='lf-sample-app-title'>
           Save to Laserfiche Sample Application
         </h2>
 
-        <div className="lf-component-container lf-right-button">
+        <div className='lf-component-container lf-right-button'>
           <lf-login
             redirect_uri={config.REDIRECT_URI}
             scope={config.SCOPE}
             authorize_url_host_name={config.HOST_NAME}
-            redirect_behavior="Replace"
+            redirect_behavior='Replace'
             client_id={config.CLIENT_ID}
             ref={this.loginComponent}
           ></lf-login>
@@ -839,17 +839,17 @@ export default class App extends React.Component<
             />
           )}
           <button
-            className="lf-refresh-button"
+            className='lf-refresh-button'
             onClick={() => this.onClickRefreshAsync()}
           >
             Refresh
           </button>
-          <div className="folder-browse-select lf-component-container">
+          <div className='folder-browse-select lf-component-container'>
             <span>
               {this.FILE_NAME}
               <input
                 disabled={this.state?.selectedFile === undefined}
-                type="text"
+                type='text'
                 value={this.displayFileName}
                 onChange={this.updateFileName}
               />
@@ -857,82 +857,82 @@ export default class App extends React.Component<
             </span>
             <div>
               <button
-                className="lf-button primary-button"
+                className='lf-button primary-button'
                 onClick={this.onInputAreaClick}
               >
                 {this.CLICK_TO_UPLOAD}
               </button>
-              <input ref={this.fileInput} type="file" hidden />
+              <input ref={this.fileInput} type='file' hidden />
 
               <button
-                className="lf-multivalue-remove-button"
+                className='lf-multivalue-remove-button'
                 disabled={!this.state?.selectedFile}
                 onClick={this.clearFileSelected}
               >
                 <svg
-                  id="close"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
+                  id='close'
+                  xmlns='http://www.w3.org/2000/svg'
+                  width='20'
+                  height='20'
+                  viewBox='0 0 20 20'
                 >
-                  <path d="M19 6.41l-1.41-1.41-5.59 5.59-5.59-5.59-1.41 1.41 5.59 5.59-5.59 5.59 1.41 1.41 5.59-5.59 5.59 5.59 1.41-1.41-5.59-5.59z" />
+                  <path d='M19 6.41l-1.41-1.41-5.59 5.59-5.59-5.59-1.41 1.41 5.59 5.59-5.59 5.59 1.41 1.41 5.59-5.59 5.59 5.59 1.41-1.41-5.59-5.59z' />
                 </svg>
               </button>
             </div>
           </div>
 
-          <div className="lf-component-container">
-            <div className="folder-browse-select">
+          <div className='lf-component-container'>
+            <div className='folder-browse-select'>
               {this.SELECTED_FOLDER}
               {this.state?.lfSelectedFolder?.selectedFolderName ??
                 this.FOLDER_BROWSER_PLACEHOLDER}
               <button
                 onClick={this.onClickBrowse}
                 hidden={this.state?.expandFolderBrowser}
-                className="lf-button primary-button"
+                className='lf-button primary-button'
               >
                 {this.BROWSE}
               </button>
             </div>
             <a
               hidden={!this.state?.lfSelectedFolder}
-              className="open-in-lf-link"
+              className='open-in-lf-link'
               href={this.state?.lfSelectedFolder?.selectedNodeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+              target='_blank'
+              rel='noopener noreferrer'
             >
               {this.OPEN_IN_LASERFICHE}
             </a>
-            <div className="lf-folder-browser-sample-container">
+            <div className='lf-folder-browser-sample-container'>
               {this.state?.expandFolderBrowser && (
-                <div className="repository-browser">
-                  <div className="repo-browser-with-toolbar">
+                <div className='repository-browser'>
+                  <div className='repo-browser-with-toolbar'>
                     <lf-repository-browser
                       ref={this.repositoryBrowser}
-                      multiple="false"
-                      style={{ height: "420px" }}
+                      multiple='false'
+                      style={{ height: '420px' }}
                     ></lf-repository-browser>
                     <lf-toolbar ref={this.toolBarElement}></lf-toolbar>
                   </div>
-                  <div className="repository-browser-button-containers">
+                  <div className='repository-browser-button-containers'>
                     <span>
                       <button
-                        className="lf-button primary-button"
+                        className='lf-button primary-button'
                         onClick={this.onOpenNode}
                         hidden={!this.state?.shouldShowOpen}
                       >
                         {this.OPEN}
                       </button>
                       <button
-                        className="lf-button primary-button"
+                        className='lf-button primary-button'
                         onClick={this.onSelectFolder}
                         hidden={!this.state?.shouldShowSelect}
                       >
                         {this.SELECT}
                       </button>
                       <button
-                        className="sec-button lf-button margin-left-button"
+                        className='sec-button lf-button margin-left-button'
                         hidden={!this.state?.expandFolderBrowser}
                         onClick={this.onClickCancelButton}
                       >
@@ -945,16 +945,16 @@ export default class App extends React.Component<
             </div>
           </div>
 
-          <div className="lf-component-container">
+          <div className='lf-component-container'>
             <lf-field-container
               ref={this.fieldContainer}
-              collapsible="true"
-              startCollapsed="true"
+              collapsible='true'
+              startCollapsed='true'
             ></lf-field-container>
           </div>
-          <div className="lf-component-container lf-right-button">
+          <div className='lf-component-container lf-right-button'>
             <button
-              className="lf-button primary-button"
+              className='lf-button primary-button'
               disabled={!this.enableSave}
               onClick={this.onClickSave}
             >
@@ -968,20 +968,20 @@ export default class App extends React.Component<
 
   // localization helpers
 
-  BROWSE = this.localizationService.getString("BROWSE");
+  BROWSE = this.localizationService.getString('BROWSE');
   FOLDER_BROWSER_PLACEHOLDER = this.localizationService.getString(
-    "FOLDER_BROWSER_PLACEHOLDER"
+    'FOLDER_BROWSER_PLACEHOLDER'
   );
-  SAVE_TO_LASERFICHE = this.localizationService.getString("SAVE_TO_LASERFICHE");
-  CLICK_TO_UPLOAD = this.localizationService.getString("CLICK_TO_UPLOAD");
-  SELECTED_FOLDER = this.localizationService.getString("SELECTED_FOLDER");
-  FILE_NAME = this.localizationService.getString("FILE_NAME");
-  OPEN_IN_LASERFICHE = this.localizationService.getString("OPEN_IN_LASERFICHE");
-  OPEN = this.localizationService.getString("OPEN");
-  REFRESH = this.localizationService.getString("REFRESH");
-  NEW_FOLDER = this.localizationService.getString("NEW_FOLDER");
-  ADD_REMOVE_COLUMNS = this.localizationService.getString("ADD_REMOVE_COLUMNS");
-  SELECT = this.localizationService.getString("SELECT");
-  CANCEL = this.localizationService.getString("CANCEL");
-  UNKNOWN_ERROR = this.localizationService.getString("UNKNOWN_ERROR");
+  SAVE_TO_LASERFICHE = this.localizationService.getString('SAVE_TO_LASERFICHE');
+  CLICK_TO_UPLOAD = this.localizationService.getString('CLICK_TO_UPLOAD');
+  SELECTED_FOLDER = this.localizationService.getString('SELECTED_FOLDER');
+  FILE_NAME = this.localizationService.getString('FILE_NAME');
+  OPEN_IN_LASERFICHE = this.localizationService.getString('OPEN_IN_LASERFICHE');
+  OPEN = this.localizationService.getString('OPEN');
+  REFRESH = this.localizationService.getString('REFRESH');
+  NEW_FOLDER = this.localizationService.getString('NEW_FOLDER');
+  ADD_REMOVE_COLUMNS = this.localizationService.getString('ADD_REMOVE_COLUMNS');
+  SELECT = this.localizationService.getString('SELECT');
+  CANCEL = this.localizationService.getString('CANCEL');
+  UNKNOWN_ERROR = this.localizationService.getString('UNKNOWN_ERROR');
 }
