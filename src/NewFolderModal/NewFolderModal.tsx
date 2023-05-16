@@ -28,7 +28,6 @@ export default function NewFolderModalComponent(props: {
   errorMessage?: string;
 }) {
   const [folderName, setFolderName] = useState('');
-  const [open, setOpen] = useState(false);
   const localizationService: LfLocalizationService = new LfLocalizationService(
     resources
   );
@@ -62,7 +61,7 @@ export default function NewFolderModalComponent(props: {
   return (
     <div className='new-folder-dialog-modal'>
       <div
-        className={`new-folder-dialog-modal-content ${open ? 'show' : ''}`}
+        className='new-folder-dialog-modal-content'
         id='new-folder-dialog-content'
         onClick={(e) => e.stopPropagation()}
       >

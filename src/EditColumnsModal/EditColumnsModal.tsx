@@ -36,7 +36,6 @@ export default function EditColumnsModal(props: {
   initialColumnsSelected: ColumnDef[];
   allColumnOptions: ColumnDef[];
 }) {
-  const [open, setOpen] = useState<boolean>(false);
   const [columnsSelected, setColumnsSelected] = useState<ColumnDef[]>(
     props.initialColumnsSelected
   );
@@ -58,7 +57,7 @@ export default function EditColumnsModal(props: {
     // we provide a new array (not just new values) to trigger change detection
     let newSelected: ColumnDef[];
     if (columnsSelected.includes(column)) {
-      newSelected = [...columnsSelected.filter((c) => c != column)];
+      newSelected = [...columnsSelected.filter((c: ColumnDef) => c != column)];
     } else {
       newSelected = columnsSelected.concat([column]);
     }
@@ -68,7 +67,7 @@ export default function EditColumnsModal(props: {
   return (
     <div className='edit-columns-dialog-modal'>
       <div
-        className={`edit-columns-dialog-modal-content ${open ? 'show' : ''}`}
+        className='edit-columns-dialog-modal-content'
         id='edit-columns-dialog-content'
         onClick={(e) => e.stopPropagation()}
       >
