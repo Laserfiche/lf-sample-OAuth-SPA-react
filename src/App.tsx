@@ -453,26 +453,9 @@ export default class App extends React.Component<
     if (!this.repoClient) {
       throw new Error('RepoId is undefined');
     }
-    let focusedNode: LfRepoTreeNode | undefined;
-    if (this.state?.lfSelectedFolder) {
-      const repoId = await this.repoClient.getCurrentRepoId();
-      const focusedNodeByPath =
-        await this.repoClient.entriesClient.getEntryByPath({
-          repoId: repoId,
-          fullPath: this.state?.lfSelectedFolder.selectedFolderPath,
-        });
-      const repoName = await this.repoClient.getCurrentRepoName();
-      const focusedNodeEntry = focusedNodeByPath?.entry;
-      if (focusedNodeEntry) {
-        focusedNode = this.lfRepoTreeService?.createLfRepoTreeNode(
-          focusedNodeEntry,
-          repoName
-        );
-      }
-    }
     await this.repositoryBrowser?.current?.initAsync(
       this.lfRepoTreeService!,
-      focusedNode
+      this.state.lfSelectedFolder?.selectedFolderPath
     );
     if (this.repositoryBrowser?.current) {
       this.repositoryBrowser.current.isSelectable = this.isNodeSelectable;
