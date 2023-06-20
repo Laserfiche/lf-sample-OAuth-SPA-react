@@ -43,8 +43,8 @@ const resources: Map<string, object> = new Map<string, object>([
       FOLDER_BROWSER_PLACEHOLDER: 'No folder selected',
       SAVE_TO_LASERFICHE: 'Save to Laserfiche',
       CLICK_TO_UPLOAD: 'Click to upload file',
-      SELECTED_FOLDER: 'Selected Folder: ',
-      FILE_NAME: 'File Name: ',
+      SELECTED_FOLDER: 'Selected Folder:',
+      FILE_NAME: 'File Name:',
       BROWSE: 'Browse',
       OPEN_IN_LASERFICHE: 'Open in Laserfiche',
       OPEN: 'Open',
@@ -957,8 +957,8 @@ export default class App extends React.Component<
   );
   SAVE_TO_LASERFICHE = this.localizationService.getString('SAVE_TO_LASERFICHE');
   CLICK_TO_UPLOAD = this.localizationService.getString('CLICK_TO_UPLOAD');
-  SELECTED_FOLDER = this.localizationService.getString('SELECTED_FOLDER');
-  FILE_NAME = this.localizationService.getString('FILE_NAME');
+  SELECTED_FOLDER = this.localizationService.getString('SELECTED_FOLDER') + ' ';
+  FILE_NAME = this.localizationService.getString('FILE_NAME') + ' ';
   OPEN_IN_LASERFICHE = this.localizationService.getString('OPEN_IN_LASERFICHE');
   OPEN = this.localizationService.getString('OPEN');
   REFRESH = this.localizationService.getString('REFRESH');
