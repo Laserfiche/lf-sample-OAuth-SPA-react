@@ -9,6 +9,7 @@ import {
   LfTreeNode,
   ToolbarOption,
   ColumnDef,
+  LfHttpRequestHandler,
 } from '@laserfiche/types-lf-ui-components';
 import { NgElement, WithProperties } from '@angular/elements';
 import { LfLocalizationService } from '@laserfiche/lf-js-utils';
@@ -261,49 +262,6 @@ export default class App extends React.Component<
     }
   }
 
-  private beforeFetchRequestAsync = async (
-    url: string,
-    request: RequestInit
-  ) => {
-    // TODO trigger authorization flow if no accessToken
-    const accessToken =
-      this.loginComponent?.current?.authorization_credentials?.accessToken;
-    if (accessToken) {
-      this.addAuthorizationHeader(request, accessToken);
-      let regionalDomain: string | undefined =
-        this.loginComponent.current?.account_endpoints?.regionalDomain;
-      if (!regionalDomain) {
-        console.log('could not get regionalDomain from loginComponent');
-        regionalDomain = config.HOST_NAME;
-      }
-      return { regionalDomain };
-    } else {
-      throw new Error('No access token');
-    }
-  };
-
-  private afterFetchResponseAsync = async (
-    url: string,
-    response: ResponseInit,
-    request: RequestInit
-  ) => {
-    if (response.status === 401) {
-      const refresh = await this.loginComponent.current?.refreshTokenAsync(
-        true
-      );
-      if (refresh) {
-        const accessToken =
-          this.loginComponent.current?.authorization_credentials?.accessToken;
-        this.addAuthorizationHeader(request, accessToken);
-        return true;
-      } else {
-        this.repoClient?.clearCurrentRepo();
-        return false;
-      }
-    }
-    return false;
-  };
-
   private getCurrentRepo = async () => {
     const repos = await this.repoClient!.repositoriesClient.getRepositoryList(
       {}
@@ -317,11 +275,12 @@ export default class App extends React.Component<
 
   async ensureRepoClientInitializedAsync(): Promise<void> {
     if (!this.repoClient) {
+      const requestHandler = this.loginComponent.current?.authorizationRequestHandler;
+      if (!requestHandler){
+        throw new Error("LfLoginComponent was not found, cannot get authorizationRequestHandler");
+      }
       const partialRepoClient: IRepositoryApiClient =
-        RepositoryApiClient.createFromHttpRequestHandler({
-          beforeFetchRequestAsync: this.beforeFetchRequestAsync,
-          afterFetchResponseAsync: this.afterFetchResponseAsync,
-        });
+        RepositoryApiClient.createFromHttpRequestHandler(requestHandler);
       const clearCurrentRepo = () => {
         this.repoClient!._repoId = undefined;
         this.repoClient!._repoName = undefined;
