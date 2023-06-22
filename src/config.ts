@@ -1,7 +1,7 @@
 const config = {
-  REDIRECT_URI: 'http://localhost:3000', // i.e http://localhost:3000, https://serverName/lf-sample/index.html
-  CLIENT_ID: '6bd54321-2737-4a42-985d-abac41375af5',
-  HOST_NAME: 'a.clouddev.laserfiche.com', // only update this if you are using a different environment (e.g. a.clouddev.laserfiche.com)
+  REDIRECT_URI: 'REPLACE_WITH_YOUR_REDIRECT_URI', // i.e http://localhost:3000, https://serverName/lf-sample/index.html
+  CLIENT_ID: 'REPLACE_WITH_YOUR_CLIENT_ID',
+  HOST_NAME: 'laserfiche.com', // only update this if you are using a different environment (e.g. a.clouddev.laserfiche.com)
   SCOPE: 'repository.Read repository.Write', // Scope(s) requested by the app
 };
 
