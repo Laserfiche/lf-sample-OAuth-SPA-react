@@ -22,7 +22,7 @@ We welcome contributions and feedback. Please follow our [contributing guideline
 ## Pre-Requisites
 
 - Visual Studio Code
-- Node 14 (LTS)
+- Node 16 (LTS)
 - all other React pre-reqs are in the local package.json
 
 ## First Time Setup
