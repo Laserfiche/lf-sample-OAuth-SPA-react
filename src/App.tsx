@@ -9,7 +9,6 @@ import {
   LfTreeNode,
   ToolbarOption,
   ColumnDef,
-  LfHttpRequestHandler,
 } from '@laserfiche/types-lf-ui-components';
 import { NgElement, WithProperties } from '@angular/elements';
 import { LfLocalizationService } from '@laserfiche/lf-js-utils';
