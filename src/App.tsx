@@ -278,7 +278,7 @@ export default class App extends React.Component<
         this.loginComponent.current?.authorizationRequestHandler;
       if (!requestHandler) {
         throw new Error(
-          'LfLoginComponent was not found, cannot get authorizationRequestHandler'
+          'this.loginComponent.current is undefined'
         );
       }
       const partialRepoClient: IRepositoryApiClient =
