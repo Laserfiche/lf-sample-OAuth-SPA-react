@@ -51,7 +51,7 @@
     ]
   },
   "devDependencies": {
-    "@laserfiche/types-lf-ui-components": "^14.1.3",
+    "@laserfiche/types-lf-ui-components": "^14.1.4",
     "@typescript-eslint/eslint-plugin": "^5.38.1",
     "@typescript-eslint/parser": "^5.38.1",
     "eslint": "^8.24.0",

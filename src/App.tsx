@@ -43,8 +43,8 @@ const resources: Map<string, object> = new Map<string, object>([
       FOLDER_BROWSER_PLACEHOLDER: 'No folder selected',
       SAVE_TO_LASERFICHE: 'Save to Laserfiche',
       CLICK_TO_UPLOAD: 'Click to upload file',
-      SELECTED_FOLDER: 'Selected Folder: ',
-      FILE_NAME: 'File Name: ',
+      SELECTED_FOLDER_COLON: 'Selected Folder:',
+      FILE_NAME_COLON: 'File Name:',
       BROWSE: 'Browse',
       OPEN_IN_LASERFICHE: 'Open in Laserfiche',
       OPEN: 'Open',
@@ -63,8 +63,8 @@ const resources: Map<string, object> = new Map<string, object>([
       FOLDER_BROWSER_PLACEHOLDER: 'No folder selected - Spanish',
       SAVE_TO_LASERFICHE: 'Save to Laserfiche - Spanish',
       CLICK_TO_UPLOAD: 'Click to upload file - Spanish',
-      SELECTED_FOLDER: 'Selected Folder: - Spanish',
-      FILE_NAME: 'File Name: - Spanish',
+      SELECTED_FOLDER_COLON: 'Selected Folder: - Spanish',
+      FILE_NAME_COLON: 'File Name: - Spanish',
       BROWSE: 'Browse - Spanish',
       OPEN_IN_LASERFICHE: 'Open in Laserfiche - Spanish',
       OPEN: 'Open - Spanish',
@@ -261,49 +261,6 @@ export default class App extends React.Component<
     }
   }
 
-  private beforeFetchRequestAsync = async (
-    url: string,
-    request: RequestInit
-  ) => {
-    // TODO trigger authorization flow if no accessToken
-    const accessToken =
-      this.loginComponent?.current?.authorization_credentials?.accessToken;
-    if (accessToken) {
-      this.addAuthorizationHeader(request, accessToken);
-      let regionalDomain: string | undefined =
-        this.loginComponent.current?.account_endpoints?.regionalDomain;
-      if (!regionalDomain) {
-        console.log('could not get regionalDomain from loginComponent');
-        regionalDomain = config.HOST_NAME;
-      }
-      return { regionalDomain };
-    } else {
-      throw new Error('No access token');
-    }
-  };
-
-  private afterFetchResponseAsync = async (
-    url: string,
-    response: ResponseInit,
-    request: RequestInit
-  ) => {
-    if (response.status === 401) {
-      const refresh = await this.loginComponent.current?.refreshTokenAsync(
-        true
-      );
-      if (refresh) {
-        const accessToken =
-          this.loginComponent.current?.authorization_credentials?.accessToken;
-        this.addAuthorizationHeader(request, accessToken);
-        return true;
-      } else {
-        this.repoClient?.clearCurrentRepo();
-        return false;
-      }
-    }
-    return false;
-  };
-
   private getCurrentRepo = async () => {
     const repos = await this.repoClient!.repositoriesClient.getRepositoryList(
       {}
@@ -317,11 +274,15 @@ export default class App extends React.Component<
 
   async ensureRepoClientInitializedAsync(): Promise<void> {
     if (!this.repoClient) {
+      const requestHandler =
+        this.loginComponent.current?.authorizationRequestHandler;
+      if (!requestHandler) {
+        throw new Error(
+          'this.loginComponent.current is undefined'
+        );
+      }
       const partialRepoClient: IRepositoryApiClient =
-        RepositoryApiClient.createFromHttpRequestHandler({
-          beforeFetchRequestAsync: this.beforeFetchRequestAsync,
-          afterFetchResponseAsync: this.afterFetchResponseAsync,
-        });
+        RepositoryApiClient.createFromHttpRequestHandler(requestHandler);
       const clearCurrentRepo = () => {
         this.repoClient!._repoId = undefined;
         this.repoClient!._repoName = undefined;
@@ -829,7 +790,7 @@ export default class App extends React.Component<
           </button>
           <div className='folder-browse-select lf-component-container'>
             <span>
-              {this.FILE_NAME}
+              {this.FILE_NAME_COLON}{' '}
               <input
                 disabled={this.state?.selectedFile === undefined}
                 type='text'
@@ -867,7 +828,7 @@ export default class App extends React.Component<
 
           <div className='lf-component-container'>
             <div className='folder-browse-select'>
-              {this.SELECTED_FOLDER}
+              {this.SELECTED_FOLDER_COLON}{' '}
               {this.state?.lfSelectedFolder?.selectedFolderName ??
                 this.FOLDER_BROWSER_PLACEHOLDER}
               <button
@@ -957,8 +918,10 @@ export default class App extends React.Component<
   );
   SAVE_TO_LASERFICHE = this.localizationService.getString('SAVE_TO_LASERFICHE');
   CLICK_TO_UPLOAD = this.localizationService.getString('CLICK_TO_UPLOAD');
-  SELECTED_FOLDER = this.localizationService.getString('SELECTED_FOLDER');
-  FILE_NAME = this.localizationService.getString('FILE_NAME');
+  SELECTED_FOLDER_COLON = this.localizationService.getString(
+    'SELECTED_FOLDER_COLON'
+  );
+  FILE_NAME_COLON = this.localizationService.getString('FILE_NAME_COLON');
   OPEN_IN_LASERFICHE = this.localizationService.getString('OPEN_IN_LASERFICHE');
   OPEN = this.localizationService.getString('OPEN');
   REFRESH = this.localizationService.getString('REFRESH');
