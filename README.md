@@ -13,7 +13,7 @@ This project depends on the following libraries
   - [@laserfiche/lf-ui-components-services](https://www.npmjs.com/package/@laserfiche/lf-ui-components-services)
   - [@laserfiche/types-lf-ui-components](https://www.npmjs.com/package/@laserfiche/types-lf-ui-components)
 - From lfxstatic (via NPM)
-  - [`<script src="https://lfxstatic.com/npm/@laserfiche/lf-ui-components@14/cdn/lf-ui-components.js" defer></script>`](https://lfxstatic.com/npm/@laserfiche/lf-ui-components@14/cdn/lf-ui-components.js)
+  - [`<script src="https://lfxstatic.com/npm/@laserfiche/lf-ui-components@15/cdn/lf-ui-components.js" defer></script>`](https://lfxstatic.com/npm/@laserfiche/lf-ui-components@15/cdn/lf-ui-components.js)
 
 ## Contribution
 
