@@ -12,6 +12,7 @@ code {
     monospace;
 }
 
+/* This style is messing up things, such as date-picker, date-time-picker */
 .mat-calendar-body-cell {
   position: relative !important;
 }
