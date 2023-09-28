@@ -42,7 +42,7 @@
     ]
   },
   "devDependencies": {
-    "@laserfiche/types-lf-ui-components": "^16.0.0--preview-6203674640",
+    "@laserfiche/types-lf-ui-components": "^16.0.0",
     "@typescript-eslint/eslint-plugin": "^5.38.1",
     "@typescript-eslint/parser": "^5.38.1",
     "eslint": "^8.24.0",
