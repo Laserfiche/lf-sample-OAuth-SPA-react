@@ -1,3 +1,6 @@
+// Copyright (c) Laserfiche.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 import { LfLocalizationService } from '@laserfiche/lf-js-utils';
 import React, { useEffect, useState } from 'react';
 import { ColumnDef } from '@laserfiche/types-lf-ui-components';
